@@ -219,6 +219,18 @@ def run_vector_polling():
     except Exception as e:
         print(f"⚠️ [VECTOR BOT ERROR] {e}")
 
+def keep_alive_watchdog_loop():
+    time.sleep(60)
+    service_url = os.environ.get("RENDER_EXTERNAL_URL", "https://vector-ai-assistant-u73o.onrender.com")
+    while True:
+        try:
+            req = urllib.request.Request(f"{service_url}/api/status", headers={"User-Agent": "VectorKeepAlive/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                pass
+        except Exception:
+            pass
+        time.sleep(600)
+
 def main():
     print("🎛⚡️ ========================================================")
     print(f"🎛⚡️ VECTOR BOT 2026 // 24/7 CLOUD AUTONOMOUS CONTAINER (PORT {PORT})")
@@ -226,6 +238,9 @@ def main():
 
     # 1. Запуск бота в фоновом потоке
     threading.Thread(target=run_vector_polling, daemon=True).start()
+
+    # 2. Запуск фонового Keep-Alive стража (предотвращает засыпание контейнера)
+    threading.Thread(target=keep_alive_watchdog_loop, daemon=True).start()
 
     # 2. Запуск защищенного HTTP сервера
     host = "0.0.0.0" if os.environ.get("RENDER") or os.environ.get("PORT") else "127.0.0.1"
