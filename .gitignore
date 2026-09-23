@@ -1,0 +1,33 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+ENV/
+*.lock
+*.log
+*.db
+*.sqlite3
+*.session
+*.session-journal
+*.tar.gz
+*.zip
+
+# Data persistence files (strictly isolated, never tracked in repo)
+notes.json
+expenses.json
+tasks.json
+vault.json
+config.json
+reminders.json
+cloud_index.json
+cloud_categories.json
+cloud_channel.json
+
+# Personal data dirs
+База_Заметок/
+Работа/
+Переданное_с_телефона/
+assets/
+data_backup/
