@@ -220,13 +220,30 @@ def run_vector_polling():
         print(f"⚠️ [VECTOR BOT ERROR] {e}")
 
 def keep_alive_watchdog_loop():
+    """
+    Автономный межоблачный страж Вектора:
+    В активное окно 06:00 - 22:00 MSK пингует себя и Boxing Lab каждые 10 минут.
+    В 22:00 MSK прекращает пинги и засыпает на ночь для сбережения лимита Account 2.
+    """
     time.sleep(60)
+    import datetime
     service_url = os.environ.get("RENDER_EXTERNAL_URL", "https://vector-ai-assistant-u73o.onrender.com")
+    boxing_url = "https://boxing-performance-lab.onrender.com/api/status"
+    
     while True:
         try:
-            req = urllib.request.Request(f"{service_url}/api/status", headers={"User-Agent": "VectorKeepAlive/1.0"})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                pass
+            utc_now = datetime.datetime.now(datetime.timezone.utc)
+            msk_hour = (utc_now.hour + 3) % 24
+            
+            # Активное окно с 06:00 до 22:00 MSK
+            if 6 <= msk_hour < 22:
+                for target in [f"{service_url}/api/status", boxing_url]:
+                    try:
+                        req = urllib.request.Request(target, headers={"User-Agent": "VectorCloudSentinel/2.0"})
+                        with urllib.request.urlopen(req, timeout=15):
+                            pass
+                    except Exception:
+                        pass
         except Exception:
             pass
         time.sleep(600)
