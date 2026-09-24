@@ -89,6 +89,7 @@ from cloud_storage_module import (
     get_cloud_channel,
     set_cloud_channel,
     get_cloud_hashtag,
+    detect_category,
     move_cloud_file_category,
     get_cloud_move_markup
 )
@@ -226,7 +227,11 @@ def invalidate_notes_cache():
     _NOTES_CACHE_MTIME = 0
 
 def persist_notes_data(notes):
-    persist_notes_data(notes)
+    try:
+        with open(NOTES_PATH, "w", encoding="utf-8") as f:
+            json.dump(notes, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
     redis_url = os.environ.get("REDIS_URL")
     if redis_url:
         try:
