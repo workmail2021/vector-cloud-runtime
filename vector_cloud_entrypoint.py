@@ -32,7 +32,7 @@ if REDIS_URL:
     try:
         import redis
         REDIS_CLIENT = redis.Redis.from_url(REDIS_URL, decode_responses=True)
-        print("🧠 [REDIS] Успешное подключение к облачному хранилищу данных!")
+        print("[+] [REDIS] Успешное подключение к облачному хранилищу данных!")
         # Авто-восстановление notes.json из Redis при холодном старте контейнера
         notes_f = os.path.join(BASE_DIR, "notes.json")
         if (not os.path.exists(notes_f) or os.path.getsize(notes_f) < 5):
@@ -40,9 +40,9 @@ if REDIS_URL:
             if saved_notes:
                 with open(notes_f, "w", encoding="utf-8") as nf:
                     nf.write(saved_notes)
-                print(f"📦 [REDIS] Восстановлены заметки из Redis хранилища!")
+                print(f"[+] [REDIS] Восстановлены заметки из Redis хранилища!")
     except Exception as re_err:
-        print(f"⚠️ [REDIS ERROR] Не удалось подключиться к Redis: {re_err}")
+        print(f"[!] [REDIS ERROR] Не удалось подключиться к Redis: {re_err}")
 
 
 class SlidingWindowRateLimiter:
@@ -200,7 +200,7 @@ class VectorCloudHandler(SimpleHTTPRequestHandler):
                     try:
                         REDIS_CLIENT.set("vector:notes", json.dumps(notes_data, ensure_ascii=False))
                     except Exception as re_e:
-                        print(f"⚠️ [REDIS SAVE ERROR] {re_e}")
+                        print(f"[!] [REDIS SAVE ERROR] {re_e}")
                 return self._send_json({"ok": True, "status": "saved", "count": len(notes_data) if isinstance(notes_data, list) else 1})
             except Exception as e:
                 return self._send_json({"ok": False, "error": str(e)}, 500)
@@ -209,15 +209,15 @@ class VectorCloudHandler(SimpleHTTPRequestHandler):
 
 def run_vector_polling():
     if os.environ.get("ENABLE_CLOUD_POLLING", "0") != "1":
-        print("ℹ️ [VECTOR RUNNER] Облачный polling отключен (Бот обслуживается 24/7 основным сервером на ПК).")
+        print("[i] [VECTOR RUNNER] Облачный polling отключен (Бот обслуживается 24/7 основным сервером на ПК).")
         return
     time.sleep(3)
-    print("🤖 [VECTOR RUNNER] Запуск Telegram-бота демона @vsr_guard_bot 24/7...")
+    print("[*] [VECTOR RUNNER] Запуск Telegram-бота демона @vsr_guard_bot 24/7...")
     try:
         import vector_polling
         vector_polling.main_polling_loop()
     except Exception as e:
-        print(f"⚠️ [VECTOR BOT ERROR] {e}")
+        print(f"[!] [VECTOR BOT ERROR] {e}")
 
 def keep_alive_watchdog_loop():
     """
@@ -249,9 +249,9 @@ def keep_alive_watchdog_loop():
         time.sleep(600)
 
 def main():
-    print("🎛⚡️ ========================================================")
-    print(f"🎛⚡️ VECTOR BOT 2026 // 24/7 CLOUD AUTONOMOUS CONTAINER (PORT {PORT})")
-    print("🎛⚡️ ========================================================")
+    print("[*] ========================================================")
+    print(f"[*] VECTOR BOT 2026 // 24/7 CLOUD AUTONOMOUS CONTAINER (PORT {PORT})")
+    print("[*] ========================================================")
 
     # 1. Запуск бота в фоновом потоке
     threading.Thread(target=run_vector_polling, daemon=True).start()
@@ -263,11 +263,11 @@ def main():
     host = "0.0.0.0" if os.environ.get("RENDER") or os.environ.get("PORT") else "127.0.0.1"
     server_address = (host, PORT)
     httpd = ThreadingHTTPServer(server_address, VectorCloudHandler)
-    print(f"🚀 [VECTOR SERVER] Защищенный HTTP/REST шлюз активен: http://{host}:{PORT}/")
+    print(f"[+] [VECTOR SERVER] Защищенный HTTP/REST шлюз активен: http://{host}:{PORT}/")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("🛑 Остановка сервиса Вектор...")
+        print("[-] Остановка сервиса Вектор...")
         httpd.server_close()
 
 if __name__ == "__main__":

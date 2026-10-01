@@ -2,11 +2,11 @@
 """
 Модуль автономного управления ПК через Telegram для ИИ-Вектор.
 Предоставляет:
-- ⚡️ Прямое выполнение bash-команд в Linux с мобильного телефона и ПК через Telegram
-- 📊 Оперативную телеметрию (CPU, RAM, Диски, Службы, Uptime, UFW)
-- 🎙 Голосовое управление компьютером (распознавание команд и моментальное исполнение)
-- 🏗 Поиск и отправка файлов, смет КС-2, спортивных расчетов прямо в чат
-- 🛡 Защищенный контур с контролем таймаутов и форматированием Telegram HTML
+- Прямое выполнение bash-команд в Linux с мобильного телефона и ПК через Telegram
+- Оперативную телеметрию (CPU, RAM, Диски, Службы, Uptime, UFW)
+- Голосовое управление компьютером (распознавание команд и моментальное исполнение)
+- Поиск и отправка файлов, смет КС-2, спортивных расчетов прямо в чат
+- Защищенный контур с контролем таймаутов и форматированием Telegram HTML
 """
 
 import os
@@ -32,9 +32,9 @@ def get_pc_telemetry():
         uptime_str = up_proc.stdout.strip() or "N/A"
 
         # Проверка безопасности / UFW (неинтерактивно)
-        ufw_proc = subprocess.run("sudo -n ufw status 2>/dev/null || echo '🟢 UFW активен / Сессии chmod 600'", shell=True, capture_output=True, text=True)
+        ufw_proc = subprocess.run("sudo -n ufw status 2>/dev/null || echo '[✓] UFW активен / Сессии chmod 600'", shell=True, capture_output=True, text=True)
         ufw_out = ufw_proc.stdout.strip()
-        ufw_str = "🟢 Активен (Защищен)" if "active" in ufw_out.lower() or "активен" in ufw_out.lower() else "🟢 Защищен (chmod 600)"
+        ufw_str = "[✓] Активен (Защищен)" if "active" in ufw_out.lower() or "активен" in ufw_out.lower() else "[✓] Защищен (chmod 600)"
 
         # Сервисы
         srv_proc = subprocess.run("systemctl --user is-active vector-userbot.service vector-web-gui.service 2>/dev/null", shell=True, capture_output=True, text=True)
@@ -47,8 +47,8 @@ def get_pc_telemetry():
             "ram": ram_str,
             "uptime": uptime_str,
             "ufw": ufw_str,
-            "userbot": "🟢 Работает" if userbot_ok else "⚪️ Доступен",
-            "webgui": "🟢 Работает (порт 8800)" if webgui_ok else "⚪️ Доступен",
+            "userbot": "[✓] Работает" if userbot_ok else "[ ] Доступен",
+            "webgui": "[✓] Работает (порт 8800)" if webgui_ok else "[ ] Доступен",
             "os": "Linux Mint 22 (x86_64)"
         }
     except Exception as e:
@@ -61,26 +61,26 @@ def get_pc_dashboard_text():
     """Форматирует главное окно дашборда управления ПК"""
     t = get_pc_telemetry()
     return (
-        "💻 <b>ЦЕНТР УПРАВЛЕНИЯ КОМПЬЮТЕРОМ (LINUX 24/7)</b>\n\n"
-        f"🖥 <b>Система:</b> <code>{t['os']}</code>\n"
-        f"⏱ <b>Время работы:</b> <code>{t['uptime']}</code>\n"
-        f"💾 <b>Диск (/):</b> <code>{t['disk']}</code>\n"
-        f"🧠 <b>ОЗУ (RAM):</b> <code>{t['ram']}</code>\n"
-        f"🛡 <b>Кибер-защита:</b> <code>{t['ufw']}</code>\n\n"
-        "⚙️ <b>Статус 24/7 Сервисов Вектора:</b>\n"
-        f" • 👤 Userbot Секретарь: <b>{t['userbot']}</b>\n"
-        f" • 🌐 Web-GUI (ChatGPT UI): <b>{t['webgui']}</b>\n\n"
-        "💡 <i>Отправьте команду голосом или текстом (например: <code>/bash df -h</code>, <code>Статус служб</code>, <code>Сметы КС-2</code>).</i>"
+        "<b>ЦЕНТР УПРАВЛЕНИЯ КОМПЬЮТЕРОМ (LINUX 24/7)</b>\n\n"
+        f"• Система: <code>{t['os']}</code>\n"
+        f"• Время работы: <code>{t['uptime']}</code>\n"
+        f"• Диск (/): <code>{t['disk']}</code>\n"
+        f"• ОЗУ (RAM): <code>{t['ram']}</code>\n"
+        f"• Кибер-защита: <code>{t['ufw']}</code>\n\n"
+        "<b>Статус 24/7 Сервисов Вектора:</b>\n"
+        f" • Userbot Секретарь: <b>{t['userbot']}</b>\n"
+        f" • Web-GUI (ChatGPT UI): <b>{t['webgui']}</b>\n\n"
+        "<i>Отправьте команду голосом или текстом (например: <code>/bash df -h</code>, <code>Статус служб</code>, <code>Сметы КС-2</code>).</i>"
     )
 
 def get_pc_dashboard_markup():
     """Кнопки интерактивного управления ПК"""
     return {
         "inline_keyboard": [
-            [{"text": "⚡️ 24/7 Анализ & Самолечение", "callback_data": "pc_maintenance"}, {"text": "💾 Диски & ОЗУ", "callback_data": "pc_df_free"}],
-            [{"text": "⚙️ Статус 24/7 служб", "callback_data": "pc_services"}, {"text": "🧹 Очистить кэш", "callback_data": "pc_cleanup"}],
-            [{"text": "🛡 Безопасность (chmod 600)", "callback_data": "pc_security"}, {"text": "🚀 Рестарт всех служб", "callback_data": "pc_restart_services"}],
-            [{"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}]
+            [{"text": "24/7 Анализ & Самолечение", "callback_data": "pc_maintenance"}, {"text": "Диски & ОЗУ", "callback_data": "pc_df_free"}],
+            [{"text": "Статус 24/7 служб", "callback_data": "pc_services"}, {"text": "Очистить кэш", "callback_data": "pc_cleanup"}],
+            [{"text": "Безопасность (chmod 600)", "callback_data": "pc_security"}, {"text": "Рестарт всех служб", "callback_data": "pc_restart_services"}],
+            [{"text": "« В Главное Меню", "callback_data": "nav_main"}]
         ]
     }
 
@@ -116,7 +116,7 @@ def run_high_level_pc_maintenance():
             subprocess.run(f"systemctl --user restart {srv}", shell=True)
             actions_taken.append(f"Служба {srv}: перезапущена (была {status})")
         else:
-            actions_taken.append(f"Служба {srv}: 🟢 100% active")
+            actions_taken.append(f"Служба {srv}: [✓] 100% active")
             
     # 4. Проверка прав безопасности chmod 600
     try:
@@ -128,34 +128,52 @@ def run_high_level_pc_maintenance():
         pass
         
     report = (
-        "💻 <b>ОТЧЕТ 24/7: АВТОНОМНЫЙ АНАЛИЗ И ОПТИМИЗАЦИЯ ПК</b>\n\n"
+        "<b>ОТЧЕТ 24/7: АВТОНОМНЫЙ АНАЛИЗ И ОПТИМИЗАЦИЯ ПК</b>\n\n"
         + "\n".join(f"• {a}" for a in actions_taken)
-        + "\n\n🟢 <b>Статус:</b> Система полностью оптимизирована и работает на пиковом уровне производительности."
+        + "\n\n[✓] <b>Статус:</b> Система полностью оптимизирована и работает на пиковом уровне производительности."
     )
     return report
 
+DANGEROUS_PATTERNS = [
+    r'rm\s+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|--recursive\s+--force)\s+[/~*]',
+    r'\bmkfs\b',
+    r'\bdd\s+if=',
+    r'>\s*/dev/sd[a-z]',
+    r':\(\)\s*\{\s*:\|:&\s*\};:',
+    r'(?:curl|wget)\s+.*\|\s*(?:bash|sh)',
+    r'chmod\s+(-[a-zA-Z]*R[a-zA-Z]*\s+)?777\s+/',
+]
+
 def execute_linux_command_formatted(cmd, timeout=45):
-    """Выполняет команду и форматирует результат для Telegram"""
+    """Выполняет команду с валидацией безопасности и форматирует результат для Telegram"""
+    cmd_clean = cmd.strip()
+    for pattern in DANGEROUS_PATTERNS:
+        if re.search(pattern, cmd_clean, re.IGNORECASE):
+            return (
+                f"<b>БЛОКИРОВКА КИБЕР-СТРАЖА ВЕКТОР:</b>\n\n"
+                f"Команда <code>{html.escape(cmd_clean)}</code> заблокирована встроенным фильтром безопасности ПК как потенциально опасная или деструктивная."
+            )
+
     try:
         p = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
         out = p.stdout.strip()
         err = p.stderr.strip()
 
-        res_text = f"⚡️ <b>ВЫПОЛНЕНИЕ НА ПК:</b>\n<code>$ {html.escape(cmd)}</code>\n\n"
+        res_text = f"<b>ВЫПОЛНЕНИЕ НА ПК:</b>\n<code>$ {html.escape(cmd)}</code>\n\n"
         if out:
             trunc_out = out[:3000] + ("\n... [вывод обрезан]" if len(out) > 3000 else "")
-            res_text += f"📋 <b>Результат (stdout):</b>\n<pre>{html.escape(trunc_out)}</pre>\n"
+            res_text += f"<b>Результат (stdout):</b>\n<pre>{html.escape(trunc_out)}</pre>\n"
         if err:
             trunc_err = err[:1000]
-            res_text += f"\n⚠️ <b>Ошибки/Предупреждения (stderr):</b>\n<pre>{html.escape(trunc_err)}</pre>\n"
+            res_text += f"\n<b>Ошибки/Предупреждения (stderr):</b>\n<pre>{html.escape(trunc_err)}</pre>\n"
         if not out and not err:
-            res_text += "✅ <i>Команда выполнена успешно (без вывода в консоль).</i>\n"
+            res_text += "[✓] <i>Команда выполнена успешно (без вывода в консоль).</i>\n"
 
         return res_text
     except subprocess.TimeoutExpired:
-        return f"⚠️ <b>Превышен лимит времени выполнения команды ({timeout} сек):</b>\n<code>$ {html.escape(cmd)}</code>"
+        return f"<b>Превышен лимит времени выполнения команды ({timeout} сек):</b>\n<code>$ {html.escape(cmd)}</code>"
     except Exception as e:
-        return f"❌ <b>Ошибка запуска команды:</b> {html.escape(str(e))}"
+        return f"<b>Ошибка запуска команды:</b> {html.escape(str(e))}"
 
 def handle_pc_nlp_request(text):
     """
@@ -192,6 +210,6 @@ def handle_pc_nlp_request(text):
 
     # 7. Тест готовности бойца
     if any(k in t_lower for k in ["запусти тест готовности", "combat_readiness_calculator"]):
-        return True, execute_linux_command_formatted("python3 /home/home/Документы/2/Спорт/Разработка/Тест_утром/combat_readiness_calculator.py")
+        return True, execute_linux_command_formatted("python3 /home/home/projects/boxing-sc-lab/1_core_bot/combat_readiness_calculator.py")
 
     return False, ""

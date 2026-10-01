@@ -349,7 +349,7 @@ def format_time_remaining(target_ts):
     now_ts = time.time()
     diff_sec = target_ts - now_ts
     if diff_sec <= 0:
-        return "⏰ ПРЯМО СЕЙЧАС!"
+        return "ПРЯМО СЕЙЧАС!"
     
     diff_min = int(diff_sec // 60)
     diff_hours = int(diff_min // 60)
@@ -370,14 +370,14 @@ def get_reminders_dashboard_text():
     total_active = len(active)
     
     lines = [
-        "⏰ <b>УМНЫЕ НАПОМИНАНИЯ И ТАЙМЕРЫ 5.0</b>\n",
-        "✨ <i>Точные и заблаговременные (за 15/30 мин) сигналы с авто-доставкой 24/7.</i>\n",
-        f"📊 <b>Активные напоминания ({total_active}):</b>"
+        "<b>УМНЫЕ НАПОМИНАНИЯ И ТАЙМЕРЫ 5.0</b>\n",
+        "<i>Точные и заблаговременные (за 15/30 мин) сигналы с авто-доставкой 24/7.</i>\n",
+        f"<b>Активные напоминания ({total_active}):</b>"
     ]
     
     if not active:
         lines.append("\n<i>У вас пока нет активных напоминаний.</i>")
-        lines.append("\n💡 <i>Примеры голосовых и текстовых команд:</i>")
+        lines.append("\n<i>Примеры голосовых и текстовых команд:</i>")
         lines.append(" • <code>Встреча в 2 часа, напомни за 30 минут</code>")
         lines.append(" • <code>У меня встречи. 20-15.00, напомни за 15 минут</code>")
         lines.append(" • <code>Тренировка завтра в 18:30, напомни за 1 час</code>")
@@ -389,9 +389,9 @@ def get_reminders_dashboard_text():
             dt_str = r.get("target_datetime", "")[5:16] # MM-DD HH:MM
             rem_str = format_time_remaining(r.get("target_timestamp", 0))
             adv_info = f" [{r['advance_desc']}]" if r.get("advance_desc") else ""
-            lines.append(f"\n⏰ <b>#{r_id}. {task_txt}{adv_info}</b>\n   • 📅 <b>Сигнал: {dt_str}</b> (<i>{rem_str}</i>)")
+            lines.append(f"\n<b>#{r_id}. {task_txt}{adv_info}</b>\n   • <b>Сигнал: {dt_str}</b> (<i>{rem_str}</i>)")
         
-        lines.append("\n💡 <i>Нажмите кнопку с номером напоминания ниже для управления:</i>")
+        lines.append("\n<i>Нажмите кнопку с номером напоминания ниже для управления:</i>")
         
     return "\n".join(lines)
 
@@ -402,14 +402,14 @@ def get_reminders_dashboard_markup():
     if active:
         btn_row = []
         for r in active:
-            btn_row.append({"text": f"⏰ #{r['id']}", "callback_data": f"remind_detail_{r['id']}"})
+            btn_row.append({"text": f"#{r['id']}", "callback_data": f"remind_detail_{r['id']}"})
             if len(btn_row) == 3:
                 rows.append(btn_row)
                 btn_row = []
         if btn_row:
             rows.append(btn_row)
             
-    rows.append([{"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}])
+    rows.append([{"text": "« В Главное Меню", "callback_data": "nav_main"}])
     return {"inline_keyboard": rows}
 
 def get_reminder_detail_text(remind_id):
@@ -417,23 +417,23 @@ def get_reminder_detail_text(remind_id):
     reminders = load_reminders()
     target = next((r for r in reminders if r.get("id") == remind_id), None)
     if not target:
-        return "⚠️ <b>Напоминание не найдено или уже выполнено.</b>"
+        return "<b>Напоминание не найдено или уже выполнено.</b>"
     
     task_txt = html.escape(target.get("text", "Без названия"))
     trigger_dt_str = target.get("target_datetime", "")
     event_dt_str = target.get("event_datetime", trigger_dt_str)
     rem_str = format_time_remaining(target.get("target_timestamp", 0))
     adv_str = f" (заблаговременно {target['advance_desc']})" if target.get("advance_desc") else ""
-    status_str = "🟢 Активно" if target.get("status") == "pending" else "✅ Завершено"
+    status_str = "Активно" if target.get("status") == "pending" else "Завершено"
     
     text = (
-        f"⏰ <b>УПРАВЛЕНИЕ НАПОМИНАНИЕМ #{target['id']}</b>\n\n"
-        f"📌 <b>Событие:</b> <code>{task_txt}</code>\n"
-        f"📅 <b>Время события:</b> <b>{event_dt_str}</b>\n"
-        f"🚨 <b>Время сигнала:</b> <b>{trigger_dt_str}</b>{adv_str}\n"
-        f"⏳ <b>До сигнала:</b> <i>{rem_str}</i>\n"
-        f"⚙️ <b>Статус:</b> {status_str}\n\n"
-        f"💡 <i>Выберите действие ниже:</i>"
+        f"<b>УПРАВЛЕНИЕ НАПОМИНАНИЕМ #{target['id']}</b>\n\n"
+        f"<b>Событие:</b> <code>{task_txt}</code>\n"
+        f"<b>Время события:</b> <b>{event_dt_str}</b>\n"
+        f"<b>Время сигнала:</b> <b>{trigger_dt_str}</b>{adv_str}\n"
+        f"<b>До сигнала:</b> <i>{rem_str}</i>\n"
+        f"<b>Статус:</b> {status_str}\n\n"
+        f"<i>Выберите действие ниже:</i>"
     )
     return text
 
@@ -441,19 +441,19 @@ def get_reminder_detail_markup(remind_id):
     return {
         "inline_keyboard": [
             [
-                {"text": "⏱ Отложить на 15 мин", "callback_data": f"remind_snooze_15_{remind_id}"},
-                {"text": "⏱ Отложить на 1 час", "callback_data": f"remind_snooze_60_{remind_id}"}
+                {"text": "Отложить на 15 мин", "callback_data": f"remind_snooze_15_{remind_id}"},
+                {"text": "Отложить на 1 час", "callback_data": f"remind_snooze_60_{remind_id}"}
             ],
             [
-                {"text": "🔔 Напомнить в начале", "callback_data": f"remind_at_event_{remind_id}"},
-                {"text": "✅ Выполнено", "callback_data": f"remind_done_{remind_id}"}
+                {"text": "Напомнить в начале", "callback_data": f"remind_at_event_{remind_id}"},
+                {"text": "Выполнено", "callback_data": f"remind_done_{remind_id}"}
             ],
             [
-                {"text": "🗑 Удалить", "callback_data": f"remind_del_{remind_id}"},
-                {"text": "« 🔙 К списку", "callback_data": "nav_remind"}
+                {"text": "Удалить", "callback_data": f"remind_del_{remind_id}"},
+                {"text": "« К списку", "callback_data": "nav_remind"}
             ],
             [
-                {"text": "🎛 В Главное Меню", "callback_data": "nav_main"}
+                {"text": "В Главное Меню", "callback_data": "nav_main"}
             ]
         ]
     }
@@ -474,7 +474,7 @@ def check_and_get_triggered_reminders():
         for r in triggered:
             task_title = r.get("text", "Задача")
             try:
-                subprocess.Popen(["notify-send", "-u", "critical", "-a", "ИИ-ВЕКТОР", "⏰ НАПОМИНАНИЕ ВЕКТОР", task_title])
+                subprocess.Popen(["notify-send", "-u", "critical", "-a", "ИИ-ВЕКТОР", "НАПОМИНАНИЕ ВЕКТОР", task_title])
             except Exception:
                 pass
             # Попытка воспроизвести звуковой сигнал аларма

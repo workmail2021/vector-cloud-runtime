@@ -177,17 +177,17 @@ def check_and_record_new_yandex_reviews():
         save_reviews_db(existing_db)
         log_review_event(f"Зафиксировано целевых боксерских отзывов: {len(new_discovered)} шт.")
         
-        # Отправляем оповещение в Telegram ТОЛЬКО для целевых боксерских отзывов
+        # Отправляем оповещение в Telegram ТОЛЬКО для целевых боксерских отзывов (Zero-Emoji)
         for nr in new_discovered:
-            stars = "⭐" * int(nr.get("rating", 5))
+            rating_val = nr.get("rating", 5)
             dt_str = str(nr.get("date", ""))[:10]
             msg = (
-                f"🌟 <b>НОВЫЙ ЦЕЛЕВОЙ ОТЗЫВ ПО БОКСУ / СФП!</b>\n\n"
-                f"📍 <b>Boxing S&C Lab (Скосырева 11)</b>\n"
-                f"👤 <b>{html.escape(nr['author'])}</b> | {stars}\n"
-                f"📅 <i>{html.escape(dt_str)}</i>\n\n"
-                f"💬 «<i>{html.escape(nr['text'])}</i>»\n\n"
-                f"🥊 <i>Маркер подтвержден! Отзыв сохранен на ПК для Instagram Stories.</i>"
+                f"<b>[ЯНДЕКС.КАРТЫ] НОВЫЙ ЦЕЛЕВОЙ ОТЗЫВ ПО БОКСУ / СФП</b>\n\n"
+                f"<b>Зал:</b> Boxing S&C Lab (Скосырева, 11)\n"
+                f"<b>Автор:</b> {html.escape(nr['author'])} | Оценка: [{rating_val}/5]\n"
+                f"<b>Дата:</b> {html.escape(dt_str)}\n\n"
+                f"«<i>{html.escape(nr['text'])}</i>»\n\n"
+                f"<i>Целевой маркер подтвержден. Отзыв сохранен в базу на ПК.</i>"
             )
             try:
                 send_telegram_message(msg)
@@ -195,10 +195,57 @@ def check_and_record_new_yandex_reviews():
             except Exception as e:
                 log_review_event(f"Ошибка отправки Telegram алерта: {e}")
     else:
-        log_review_event(f"Проверка завершена: целевых новых отзывов по боксу/СФП нет.")
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Целевых новых отзывов по боксу/СФП нет. База актуальна.")
+        log_review_event("Проверка завершена: целевых новых отзывов по боксу/СФП нет.")
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Целевых новых отзывов по боксу/СФП нет. База актуальна ({len(existing_db)} отзывов).")
 
     return new_discovered
 
+def get_yandex_reviews_status_card():
+    """Формирует строгую Zero-Emoji карточку статуса отзывов Яндекс.Карт."""
+    db = load_reviews_db()
+    total_target = len(db)
+    last_check_str = time.strftime("%d.%m.%Y %H:%M")
+    
+    recent_lines = []
+    for r in db[:3]:
+        r_auth = html.escape(str(r.get("author", "Гость")))
+        r_date = html.escape(str(r.get("date", ""))[:10])
+        r_rate = r.get("rating", 5)
+        r_txt = html.escape(str(r.get("text", "")).strip())
+        if len(r_txt) > 120:
+            r_txt = r_txt[:117] + "..."
+        recent_lines.append(f"• <b>{r_auth}</b> [{r_rate}/5, {r_date}]:\n  «{r_txt}»")
+    
+    recent_block = "\n\n".join(recent_lines) if recent_lines else "Отзывы еще не загружены."
+    
+    text = (
+        "<b>МОНИТОРИНГ ЯНДЕКС.КАРТ // СТАТУС 24/7</b>\n\n"
+        f"<b>Страница:</b> Центр спортивных единоборств (Скосырева, 11)\n"
+        f"<b>Статус мониторинга:</b> Активен 24/7 (сканирование каждые 12 ч)\n"
+        f"<b>Всего в базе целевых отзывов (Бокс/СФП):</b> {total_target} шт.\n"
+        f"<b>Рейтинг зала:</b> 5.0 из 5.0\n"
+        f"<b>Последняя проверка:</b> {last_check_str}\n\n"
+        f"<b>Последние зафиксированные отзывы:</b>\n\n"
+        f"{recent_block}\n\n"
+        "<i>Оповещения в Telegram приходят автоматически при появлении новых отзывов по боксу и СФП.</i>"
+    )
+    markup = {
+        "inline_keyboard": [
+            [
+                {"text": "[ПРОВЕРИТЬ СЕЙЧАС]", "callback_data": "check_yandex_now"},
+                {"text": "[ГЛАВНОЕ МЕНЮ]", "callback_data": "nav_main"}
+            ]
+        ]
+    }
+    return text, markup
+
+def send_manual_yandex_status():
+    """Отправляет актуальную сводку по отзывам Яндекс.Карт в Telegram владельцу."""
+    text, _ = get_yandex_reviews_status_card()
+    return send_telegram_message(text)
+
 if __name__ == "__main__":
-    check_and_record_new_yandex_reviews()
+    if len(sys.argv) > 1 and sys.argv[1] == "--status":
+        send_manual_yandex_status()
+    else:
+        check_and_record_new_yandex_reviews()

@@ -2,10 +2,10 @@
 """
 ИИ-ВЕКТОР: Модуль Приватного Облачного Хранилища 4.0 (Private Cloud Vault 4.0).
 Обеспечивает 100% независимое личное облако на ПК + интеграция с Telegram и Google Диском:
-- 💼 Работа (ПК + Telegram + Google Диск) — ООО «Компания Парадигма», 615-ФЗ, сметы, акты.
-- 🎙 Аудио_и_Совещания (ПК + Telegram) — Аудиозаписи планерок, встреч и звонков.
-- ☁️ Google_Диск — Зеркало облачных документов Google Drive.
-- 📁 Общее (Telegram Cloud) — Универсальное безлимитное хранилище документов и файлов в Telegram.
+- Работа (ПК + Telegram + Google Диск) — ООО «Компания Парадигма», 615-ФЗ, сметы, акты.
+- Аудио_и_Совещания (ПК + Telegram) — Аудиозаписи планерок, встреч и звонков.
+- Google_Диск — Зеркало облачных документов Google Drive.
+- Общее (Telegram Cloud) — Универсальное безлимитное хранилище документов и файлов в Telegram.
 - Постраничная навигация (пагинация), фильтрация по 4 целевым разделам.
 - Отправка любого файла из облака в Telegram в 1 клик.
 """
@@ -23,9 +23,55 @@ INDEX_FILE = os.path.join(CLOUD_BASE_DIR, "cloud_index.json")
 GDRIVE_BASE_DIR = os.path.expanduser("~/GoogleDrive")
 CLOUD_PAGE_SIZE = 5
 
-# Хранилище состояний для каждого чата
-CLOUD_PAGE_STATE = {}
-CLOUD_CAT_STATE = {}
+import threading
+import hashlib
+import re
+
+# Хранилище состояний для каждого чата (ПОТОКОБЕЗОПАСНОЕ)
+class ThreadSafeCloudState:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._data = {}
+
+    def get(self, chat_id, default=None):
+        with self._lock:
+            return self._data.get(chat_id, default)
+
+    def set(self, chat_id, value):
+        with self._lock:
+            self._data[chat_id] = value
+
+CLOUD_PAGE_STATE = ThreadSafeCloudState()
+CLOUD_CAT_STATE = ThreadSafeCloudState()
+_INDEX_LOCK = threading.Lock()
+
+def sanitize_cloud_filename(name: str) -> str:
+    """ Безопасно очищает имя файла от path traversal (../), спецсимволов и экранирует опасные исполняемые расширения """
+    if not name:
+        return f"file_{int(time.time())}.dat"
+    clean = os.path.basename(name).strip()
+    clean = re.sub(r'[\/\\:\*\?"<>\|\x00-\x1f]', '_', clean)
+    clean = re.sub(r'\.{2,}', '.', clean)
+    if not clean or clean.startswith('.'):
+        clean = f"file_{int(time.time())}" + clean
+    base, ext = os.path.splitext(clean)
+    if len(base) > 80:
+        base = base[:80]
+    dangerous_exts = {".exe", ".bat", ".cmd", ".ps1", ".vbs", ".scr"}
+    if ext.lower() in dangerous_exts:
+        ext = ext + ".safe"
+    return f"{base}{ext}"
+
+def calculate_file_sha256(file_path: str) -> str:
+    """ Вычисляет SHA-256 хеш содержимого файла блоками по 64 КБ """
+    h = hashlib.sha256()
+    try:
+        with open(file_path, "rb") as f:
+            while chunk := f.read(65536):
+                h.update(chunk)
+        return h.hexdigest()
+    except Exception:
+        return ""
 
 CATEGORIES_FILE = os.path.join(CLOUD_BASE_DIR, "cloud_categories.json")
 
@@ -45,7 +91,7 @@ def get_cloud_categories():
                         return cats
             except Exception:
                 pass
-    return ["Семейная", "Шестьсот пятнадцать", "Все про бокс", "Документы", "Общее", "Разное", "General"]
+    return ["1_Спорт", "2_Работа", "3_Общее"]
 
 def save_cloud_categories(cats):
     os.makedirs(CLOUD_BASE_DIR, exist_ok=True)
@@ -55,14 +101,14 @@ def save_cloud_categories(cats):
 def add_cloud_category(name):
     name_clean = name.strip()
     if not name_clean:
-        return False, "⚠️ Название папки не может быть пустым."
+        return False, "Название папки не может быть пустым."
     cats = get_cloud_categories()
     if name_clean in cats:
-        return False, f"⚠️ Папка «{name_clean}» уже существует."
+        return False, f"Папка «{name_clean}» уже существует."
     cats.append(name_clean)
     save_cloud_categories(cats)
     os.makedirs(os.path.join(CLOUD_BASE_DIR, name_clean), exist_ok=True)
-    return True, f"✅ Папка «{name_clean}» успешно создана!"
+    return True, f"Папка «{name_clean}» успешно создана!"
 
 def rename_cloud_category(old_name, new_name):
     cats = get_cloud_categories()
@@ -70,7 +116,7 @@ def rename_cloud_category(old_name, new_name):
     new_clean = new_name.strip()
     matched = [c for c in cats if c.lower() == old_clean.lower()]
     if not matched:
-        return False, f"⚠️ Папка «{old_name}» не найдена."
+        return False, f"Папка «{old_name}» не найдена."
     real_old = matched[0]
     cats = [new_clean if c == real_old else c for c in cats]
     save_cloud_categories(cats)
@@ -88,17 +134,17 @@ def rename_cloud_category(old_name, new_name):
             os.rename(old_dir, new_dir)
         except Exception:
             pass
-    return True, f"✅ Папка «{real_old}» успешно переименована в «{new_clean}»!"
+    return True, f"Папка «{real_old}» успешно переименована в «{new_clean}»!"
 
 def delete_cloud_category(name):
     cats = get_cloud_categories()
     name_clean = name.strip()
     matched = [c for c in cats if c.lower() == name_clean.lower()]
     if not matched:
-        return False, f"⚠️ Папка «{name}» не найдена."
+        return False, f"Папка «{name}» не найдена."
     real_name = matched[0]
     if len(cats) <= 1:
-        return False, "⚠️ Нельзя удалить последнюю оставшуюся папку."
+        return False, "Нельзя удалить последнюю оставшуюся папку."
     cats = [c for c in cats if c != real_name]
     save_cloud_categories(cats)
     
@@ -108,7 +154,7 @@ def delete_cloud_category(name):
         if e.get("category") == real_name:
             e["category"] = fallback_cat
     save_cloud_index(index)
-    return True, f"🗑 Папка «{real_name}» удалена (файлы сохранены в «{fallback_cat}»)."
+    return True, f"Папка «{real_name}» удалена (файлы сохранены в «{fallback_cat}»)."
 
 def init_cloud():
     for d in get_cloud_categories():
@@ -118,62 +164,67 @@ def init_cloud():
             json.dump([], f, ensure_ascii=False, indent=2)
 
 def load_cloud_index():
-    candidate_paths = [
-        INDEX_FILE,
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "cloud_index.json"),
-        os.path.join(os.path.dirname(__file__), "cloud_index.json"),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "Работа", "cloud_index.json"),
-        "/home/home/Документы/2/cloud_index.json",
-        "/home/home/Документы/Облачное_Хранилище/cloud_index.json"
-    ]
-    for cp in candidate_paths:
-        if os.path.exists(cp):
-            try:
-                with open(cp, "r", encoding="utf-8") as f:
-                    index = json.load(f)
-                    if isinstance(index, list) and len(index) > 0:
-                        for idx, entry in enumerate(index, start=1):
-                            if "id" not in entry:
-                                entry["id"] = idx
-                        return index
-            except Exception:
-                pass
-    return []
+    with _INDEX_LOCK:
+        candidate_paths = [
+            INDEX_FILE,
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "cloud_index.json"),
+            os.path.join(os.path.dirname(__file__), "cloud_index.json"),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "Работа", "cloud_index.json"),
+            "/home/home/Документы/2/cloud_index.json",
+            "/home/home/Документы/Облачное_Хранилище/cloud_index.json"
+        ]
+        for cp in candidate_paths:
+            if os.path.exists(cp):
+                try:
+                    with open(cp, "r", encoding="utf-8") as f:
+                        index = json.load(f)
+                        if isinstance(index, list) and len(index) > 0:
+                            for idx, entry in enumerate(index, start=1):
+                                if "id" not in entry:
+                                    entry["id"] = idx
+                            return index
+                except Exception:
+                    pass
+        return []
 
 def save_cloud_index(index_data):
-    init_cloud()
-    with open(INDEX_FILE, "w", encoding="utf-8") as f:
-        json.dump(index_data, f, ensure_ascii=False, indent=2)
-    try:
-        os.chmod(INDEX_FILE, 0o600)
-    except Exception:
-        pass
+    with _INDEX_LOCK:
+        init_cloud()
+        tmp_file = f"{INDEX_FILE}.tmp"
+        try:
+            with open(tmp_file, "w", encoding="utf-8") as f:
+                json.dump(index_data, f, ensure_ascii=False, indent=2)
+            os.replace(tmp_file, INDEX_FILE)
+        except Exception as e:
+            print(f"[!] Ошибка атомарного сохранения индекса облака: {e}")
+            # Фолбэк на прямое сохранение, если replace не сработал
+            with open(INDEX_FILE, "w", encoding="utf-8") as f:
+                json.dump(index_data, f, ensure_ascii=False, indent=2)
+        try:
+            os.chmod(INDEX_FILE, 0o600)
+        except Exception:
+            pass
+        try:
+            mirror_path = "/home/home/Документы/2/cloud_index.json"
+            with open(mirror_path, "w", encoding="utf-8") as f:
+                json.dump(index_data, f, ensure_ascii=False, indent=2)
+            os.chmod(mirror_path, 0o600)
+        except Exception:
+            pass
 
-def detect_category(file_name, default_category="Разное"):
+def detect_category(file_name, default_category="3_Общее"):
     name_lower = file_name.lower()
-    ext = os.path.splitext(file_name)[1].lower()
     
-    # 1. Шестьсот пятнадцать (615-ФЗ, Котово, сметы, акты, стройка)
-    if any(kw in name_lower for kw in ["615", "шестьсот", "парадигм", "котово", "михайловк", "лавров", "дубовк", "смета", "кс-2", "кс-3", "технадзор", "работ", "договор", "объект", "дефект", "акт", "орлов", "распоряжен", "капремонт"]):
-        return "Шестьсот пятнадцать"
+    # 1. 1_Спорт (бокс, тренировки, СФП/ОФП, физиология, фармакология)
+    if any(kw in name_lower for kw in ["бокс", "спорт", "тренир", "спарринг", "ufc", "перчатк", "лап", "офп", "сфп", "метод", "раунд", "янсен", "селуянов", "пульс", "чсс", "rmssd", "ортопроба", "штанге", "фармакол"]):
+        return "1_Спорт"
     
-    # 2. Семейная (фотографии, альбомы, семейные снимки)
-    elif ext in [".jpg", ".jpeg", ".png", ".heic", ".webp", ".bmp", ".gif", ".raw", ".dng"] or any(kw in name_lower for kw in ["img_", "dsc_", "photo", "фото", "семья", "семейн", "ирина", "роман", "дети", "отпуск", "дом", "родные"]):
-        return "Семейная"
+    # 2. 2_Работа (615-ФЗ, Котово, Парадигма, сметы, КС-2, акты, договоры)
+    elif any(kw in name_lower for kw in ["615", "шестьсот", "парадигм", "котово", "михайловк", "лавров", "дубовк", "смета", "кс-2", "кс-3", "технадзор", "работ", "договор", "объект", "дефект", "акт", "орлов", "распоряжен", "капремонт", "аоср"]):
+        return "2_Работа"
     
-    # 3. Все про бокс (бокс, тренировки, спарринги, UFC, спорт)
-    elif any(kw in name_lower for kw in ["бокс", "спорт", "тренир", "спарринг", "ufc", "перчатк", "лап", "офп", "сфп", "метод", "раунд"]):
-        return "Все про бокс"
-    
-    # 4. Официальные документы
-    elif ext in [".pdf", ".docx", ".doc", ".xlsx", ".xls"] and any(kw in name_lower for kw in ["паспорт", "снилс", "инн", "выписка", "свидетельст", "устав", "лицензия", "справка", "полис", "реквизит"]):
-        return "Документы"
-    
-    # 5. Аудио и Совещания
-    elif ext in [".mp3", ".m4a", ".ogg", ".wav", ".aac", ".flac", ".wma"] or any(kw in name_lower for kw in ["совещан", "голос", "планерк", "audio"]):
-        return "Шестьсот пятнадцать" if "615" in name_lower else "Разное"
-        
-    return default_category
+    # 3. 3_Общее (документы, медиа, аудио, семейное, прочее)
+    return "3_Общее"
 
 def detect_explicit_cloud_category(text):
     if not text:
@@ -181,49 +232,23 @@ def detect_explicit_cloud_category(text):
     import re
     t_lower = text.lower()
     
-    # 1. Семейная / Семья / Фото
-    if any(kw in t_lower for kw in ["в семейная", "в семейную", "в семейное", "в семью", "папка семейная", "папка семья", "папку семья", "папку семейная", "сохрани в семейная", "сохрани в семейную", "сохрани в семью", "в облаке папка семейная", "в облако семейная", "в фото", "папка фото", "#семья", "#семейная", "#фото"]):
-        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси|перенеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к|по)?\s*(?:папку|папка|раздел)?\s*(?:семейная|семейную|семейное|семья|семью|фото|фотографии)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
-        clean = re.sub(r'#(?:семья|семейная|фото|семейное)', '', clean, flags=re.I).strip()
-        return "Семейная", clean
+    # 1. Спорт
+    if any(kw in t_lower for kw in ["в спорт", "в спортивную", "папка спорт", "папку спорт", "сохрани в спорт", "#спорт", "#бокс"]):
+        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси|перенеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к|по)?\s*(?:папку|папка|раздел)?\s*(?:спорт|спортивное|спортивную|бокс)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
+        clean = re.sub(r'#(?:спорт|бокс)', '', clean, flags=re.I).strip()
+        return "1_Спорт", clean
 
-    # 2. Шестьсот пятнадцать (615-ФЗ)
-    if any(kw in t_lower for kw in ["в шестьсот пятнадцать", "в шестьсот 15", "в 615", "по 615", "папка 615", "папку 615", "папка шестьсот пятнадцать", "сохрани в 615", "сохрани в шестьсот", "в работу", "по работе", "папка работа", "папку работа", "сохрани в работу", "#615", "#615фз", "#парадигма", "#работа"]):
-        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси|перенеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к|по)?\s*(?:папку|папка|раздел)?\s*(?:шестьсот\s+пятнадцать|шестьсот|615|615-фз|615фз|работа|работу|работе)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
-        clean = re.sub(r'#(?:615|615фз|парадигма|работа)', '', clean, flags=re.I).strip()
-        return "Шестьсот пятнадцать", clean
+    # 2. Работа
+    if any(kw in t_lower for kw in ["в работу", "по работе", "папка работа", "папку работа", "сохрани в работу", "в 615", "по 615", "#работа", "#615", "#615фз"]):
+        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси|перенеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к|по)?\s*(?:папку|папка|раздел)?\s*(?:работа|работу|работе|615|615-фз|615фз)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
+        clean = re.sub(r'#(?:работа|615|615фз|парадигма)', '', clean, flags=re.I).strip()
+        return "2_Работа", clean
 
-    # 3. Все про бокс
-    if any(kw in t_lower for kw in ["во все про бокс", "в бокс", "про бокс", "папка бокс", "папку бокс", "в спорт", "папка спорт", "сохрани в бокс", "сохрани в спорт", "#бокс", "#спорт"]):
-        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси|перенеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к|по)?\s*(?:папку|папка|раздел)?\s*(?:все\s+про\s+бокс|бокс|боксу|спорт|спорту)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
-        clean = re.sub(r'#(?:бокс|спорт)', '', clean, flags=re.I).strip()
-        return "Все про бокс", clean
-
-    # 4. Документы
-    if any(kw in t_lower for kw in ["в документы", "в доки", "папка документы", "папку документы", "сохрани в документы", "#документы", "#паспорт"]):
-        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к)?\s*(?:папку|папка|раздел)?\s*(?:документы|документ|доки)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
-        clean = re.sub(r'#(?:документы|документ|паспорт)', '', clean, flags=re.I).strip()
-        return "Документы", clean
-
-    # 5. Общее
-    if any(kw in t_lower for kw in ["в общее", "в общую", "папка общее", "папка общая", "папку общее", "сохрани в общее", "#общее"]):
-        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к)?\s*(?:папку|папка|раздел)?\s*(?:общее|общая|общую)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
-        clean = re.sub(r'#общее', '', clean, flags=re.I).strip()
-        return "Общее", clean
-
-    # 6. Разное
-    if any(kw in t_lower for kw in ["в разное", "в разный", "папка разное", "папку разное", "сохрани в разное", "#разное"]):
-        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к)?\s*(?:папку|папка|раздел)?\s*(?:разное|разный|разные)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
-        clean = re.sub(r'#разное', '', clean, flags=re.I).strip()
-        return "Разное", clean
-
-    # 7. General / Дженерал
-    if any(kw in t_lower for kw in ["в дженерал", "в general", "папка general", "папка дженерал", "в главную", "#general"]):
-        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к)?\s*(?:папку|папка|раздел)?\s*(?:general|дженерал|главная|главную)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
-        clean = re.sub(r'#general', '', clean, flags=re.I).strip()
-        return "General", clean
-
-    return None, text
+    # 3. Общее
+    if any(kw in t_lower for kw in ["в общее", "в общую", "папка общее", "папку общее", "сохрани в общее", "#общее"]):
+        clean = re.sub(r'^(?:добавь|сохрани|сохранить|запиши|внеси|перенеси)?\s*(?:в\s+облаке\s+папка|в\s+облако\s+папка|в\s+облаке|в\s+облако|в|к|по)?\s*(?:папку|папка|раздел)?\s*(?:общее|общую|общая)\s*(?:от|для)?\s*:?\s*', '', text, flags=re.I).strip()
+        clean = re.sub(r'#(?:общее|общая)', '', clean, flags=re.I).strip()
+        return "3_Общее", clean
 
     return None, text
 
@@ -233,21 +258,76 @@ def move_cloud_file_category(file_id, new_category):
         if e.get("id") == file_id:
             e["category"] = new_category
             save_cloud_index(index)
-            return True, f"✅ Файл #{file_id} перемещен в папку «{new_category}»!"
-    return False, "⚠️ Файл не найден в базе."
+            return True, f"Файл #{file_id} перемещен в папку «{new_category}»!"
+    return False, "Файл не найден в базе."
+
+def upload_and_save_to_cloud_channel(src_path: str, original_name: str, category: str = "Все про бокс",
+                                      tg_channel_id: int = -1003991229709, bot_token: str = None) -> dict:
+    """
+    Выгружает файл в приватный Telegram-канал (cloud-хранилище),
+    получает tg_message_id из ответа и сохраняет запись в индекс.
+    Гарантирует корректную работу FallBack-восстановления.
+    """
+    import urllib.request
+    tg_msg_id = None
+
+    if bot_token and os.path.exists(src_path):
+        try:
+            import mimetypes
+            boundary = "----BotAPIBoundary7x9k"
+            mime_type = mimetypes.guess_type(original_name)[0] or "application/octet-stream"
+            is_video = mime_type.startswith("video/")
+            field = "video" if is_video else "document"
+            with open(src_path, "rb") as f:
+                file_data = f.read()
+            body = (
+                f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{tg_channel_id}\r\n"
+                f"--{boundary}\r\nContent-Disposition: form-data; name=\"{field}\"; filename=\"{original_name}\"\r\n"
+                f"Content-Type: {mime_type}\r\n\r\n"
+            ).encode() + file_data + f"\r\n--{boundary}--\r\n".encode()
+            api_url = f"https://api.telegram.org/bot{bot_token}/send{'Video' if is_video else 'Document'}"
+            req = urllib.request.Request(api_url, data=body,
+                                          headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                if res.get("ok"):
+                    tg_msg_id = res["result"]["message_id"]
+        except Exception as e:
+            print(f"[!] Ошибка выгрузки файла в TG Cloud: {e}")
+
+    return save_file_to_cloud(src_path, original_name, category=category,
+                               tg_message_id=tg_msg_id, tg_channel_id=tg_channel_id)
 
 def save_file_to_cloud(src_path, original_name, category=None, tg_message_id=None, tg_channel_id=None):
     init_cloud()
-    index = load_cloud_index()
+    clean_original_name = sanitize_cloud_filename(original_name)
     
     if not category:
-        category = detect_category(original_name)
+        category = detect_category(clean_original_name)
     
     cat_dir = os.path.join(CLOUD_BASE_DIR, category)
     os.makedirs(cat_dir, exist_ok=True)
     
+    file_sha256 = calculate_file_sha256(src_path) if os.path.exists(src_path) else ""
+    index = load_cloud_index()
+
+    # Дедупликация: если точная копия уже есть в хранилище
+    if file_sha256:
+        for existing in index:
+            if existing.get("sha256") == file_sha256 and os.path.exists(existing.get("path", "")):
+                updated = False
+                if tg_message_id and not existing.get("tg_message_id"):
+                    existing["tg_message_id"] = tg_message_id
+                    existing["tg_channel_id"] = tg_channel_id
+                    updated = True
+                if updated:
+                    save_cloud_index(index)
+                existing_copy = dict(existing)
+                existing_copy["is_duplicate"] = True
+                return existing_copy
+
     timestamp_str = time.strftime("%Y%m%d_%H%M%S")
-    safe_name = f"{timestamp_str}_{original_name}"
+    safe_name = f"{timestamp_str}_{clean_original_name}"
     dest_path = os.path.join(cat_dir, safe_name)
     
     file_size = 0
@@ -259,22 +339,24 @@ def save_file_to_cloud(src_path, original_name, category=None, tg_message_id=Non
             file_size = os.path.getsize(src_path) if os.path.exists(src_path) else 0
 
     # Если категория Работа — также синхронизируем в Google Drive
-    if category == "Работа" and os.path.exists(src_path):
+    if category == "Работа" and os.path.exists(dest_path):
         try:
             gdrive_work = os.path.join(GDRIVE_BASE_DIR, "Работа")
             os.makedirs(gdrive_work, exist_ok=True)
-            shutil.copy2(src_path, os.path.join(gdrive_work, original_name))
+            shutil.copy2(dest_path, os.path.join(gdrive_work, clean_original_name))
         except Exception:
             pass
 
     new_id = max([e.get("id", 0) for e in index] + [0]) + 1
     entry = {
         "id": new_id,
-        "original_name": original_name,
+        "original_name": clean_original_name,
         "saved_name": safe_name,
         "path": dest_path,
         "category": category,
         "size_bytes": file_size,
+        "sha256": file_sha256,
+        "encrypted": False,
         "date": time.strftime("%Y-%m-%d %H:%M:%S")
     }
     if tg_message_id:
@@ -284,6 +366,14 @@ def save_file_to_cloud(src_path, original_name, category=None, tg_message_id=Non
 
     index.append(entry)
     save_cloud_index(index)
+
+    # Авто-индексация для полнотекстового поиска FTS5
+    try:
+        from cloud_ocr_search import index_file
+        index_file(dest_path, category)
+    except Exception:
+        pass
+
     return entry
 
 def save_text_to_cloud(text_content, title="Документ", category="Общая"):
@@ -294,7 +384,8 @@ def save_text_to_cloud(text_content, title="Документ", category="Общ�
     os.makedirs(cat_dir, exist_ok=True)
 
     timestamp_str = time.strftime("%Y%m%d_%H%M%S")
-    file_name = f"{timestamp_str}_{title[:20]}.txt"
+    safe_title = sanitize_cloud_filename(title[:24])
+    file_name = f"{timestamp_str}_{safe_title}.txt"
     dest_path = os.path.join(cat_dir, file_name)
 
     with open(dest_path, "w", encoding="utf-8") as f:
@@ -306,7 +397,7 @@ def save_text_to_cloud(text_content, title="Документ", category="Общ�
             sub = "Работа" if category == "Работа" else ""
             gdir = os.path.join(GDRIVE_BASE_DIR, sub) if sub else GDRIVE_BASE_DIR
             os.makedirs(gdir, exist_ok=True)
-            with open(os.path.join(gdir, f"{title}.txt"), "w", encoding="utf-8") as f:
+            with open(os.path.join(gdir, f"{safe_title}.txt"), "w", encoding="utf-8") as f:
                 f.write(text_content)
         except Exception:
             pass
@@ -314,7 +405,7 @@ def save_text_to_cloud(text_content, title="Документ", category="Общ�
     new_id = max([e.get("id", 0) for e in index] + [0]) + 1
     entry = {
         "id": new_id,
-        "original_name": f"{title}.txt",
+        "original_name": f"{safe_title}.txt",
         "saved_name": file_name,
         "path": dest_path,
         "category": category,
@@ -324,7 +415,43 @@ def save_text_to_cloud(text_content, title="Документ", category="Общ�
     }
     index.append(entry)
     save_cloud_index(index)
+
+    # Авто-индексация для полнотекстового поиска FTS5
+    try:
+        from cloud_ocr_search import index_file
+        index_file(dest_path, category)
+    except Exception:
+        pass
+
     return entry
+
+def prepare_cloud_file_for_send(file_id: int):
+    """
+    Подготавливает файл для отправки владельцу в Telegram.
+    Если файл зашифрован Zero-Knowledge (AES-256), расшифровывает на лету перед отдачей.
+    Возвращает (file_path_to_send, original_name, was_decrypted).
+    """
+    entry = get_cloud_file_by_id(file_id)
+    if not entry:
+        return None, None, False
+
+    fpath = entry.get("path", "")
+    orig_name = entry.get("original_name", "Файл")
+    is_enc = entry.get("encrypted", False) or fpath.endswith(".enc")
+
+    if not os.path.exists(fpath):
+        return None, orig_name, False
+
+    if is_enc:
+        try:
+            from cloud_crypto_engine import decrypt_file_from_cloud
+            decrypted_path = decrypt_file_from_cloud(fpath)
+            return decrypted_path, orig_name, True
+        except Exception as e:
+            print(f"[!] Ошибка Zero-Knowledge расшифровки файла #{file_id}: {e}")
+            return fpath, orig_name, False
+
+    return fpath, orig_name, False
 
 def get_cloud_file_by_id(file_id):
     index = load_cloud_index()
@@ -349,6 +476,25 @@ def delete_file_from_cloud(file_id):
                 os.remove(target["path"])
             except Exception:
                 pass
+                
+        # Garbage Collector: удаляем сообщение в Telegram Cloud
+        tg_channel_id = target.get("tg_channel_id")
+        tg_message_id = target.get("tg_message_id")
+        if tg_channel_id and tg_message_id:
+            try:
+                import urllib.request
+                import json
+                from core.config import load_config
+                cfg = load_config()
+                token = cfg.get("bot_token")
+                if token:
+                    url = f"https://api.telegram.org/bot{token}/deleteMessage"
+                    data = json.dumps({"chat_id": tg_channel_id, "message_id": tg_message_id}).encode()
+                    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+                    urllib.request.urlopen(req, timeout=5)
+            except Exception as e:
+                print(f"[!] Ошибка удаления файла {file_id} из Telegram Cloud: {e}")
+                
         save_cloud_index(new_index)
         return True
     return False
@@ -401,15 +547,7 @@ def format_file_size(size_bytes):
         return f"{size_bytes / (1024 * 1024):.2f} МБ"
 
 def get_cloud_category_icon(category):
-    c = str(category).lower()
-    if "семейн" in c or "семь" in c or "фото" in c: return "👨‍👩‍👧"
-    if "шестьсот" in c or "615" in c or "работ" in c: return "🏗"
-    if "бокс" in c or "спорт" in c: return "🥊"
-    if "документ" in c or "док" in c: return "📄"
-    if "общее" in c or "общая" in c: return "📁"
-    if "разное" in c or "разн" in c: return "📦"
-    if "general" in c or "дженерал" in c: return "🌐"
-    return "📁"
+    return ""
 
 def get_cloud_dashboard_text():
     index = load_cloud_index()
@@ -418,15 +556,16 @@ def get_cloud_dashboard_text():
     cats = get_cloud_categories()
 
     lines = [
-        "☁️ <b>ЛИЧНОЕ ОБЛАЧНОЕ ХРАНИЛИЩЕ</b>\n",
-        f"📊 <b>Каталог файлов ({len(index)} объектов • {total_mb:.2f} МБ):</b>"
+        "<b>ЛИЧНОЕ ОБЛАЧНОЕ ХРАНИЛИЩЕ</b>\n",
+        f"<b>Каталог файлов ({len(index)} объектов • {total_mb:.2f} МБ):</b>"
     ]
     for cat in cats:
-        icon = get_cloud_category_icon(cat)
         cat_files = get_filtered_cloud_files(cat)
-        lines.append(f" • {icon} <b>{cat}:</b> {len(cat_files)} файлов")
+        lines.append(f" • <b>{cat}:</b> {len(cat_files)} файлов")
         
-    lines.append("\n📂 <i>Выберите раздел для просмотра или используйте кнопки ниже для управления папками:</i>")
+    lines.append("<b>Защита:</b> Zero-Knowledge AES-256 E2EE активна")
+    lines.append("<b>Полнотекстовый OCR:</b> Индекс FTS5 активен\n")
+    lines.append("<i>Выберите раздел для просмотра или воспользуйтесь поиском:</i>")
     return "\n".join(lines)
 
 def get_cloud_dashboard_markup():
@@ -434,8 +573,7 @@ def get_cloud_dashboard_markup():
     rows = []
     btn_row = []
     for cat in cats:
-        icon = get_cloud_category_icon(cat)
-        btn_row.append({"text": f"{icon} {cat}", "callback_data": f"cloud_cat_{cat}"})
+        btn_row.append({"text": f"{cat}", "callback_data": f"cloud_cat_{cat}"})
         if len(btn_row) == 2:
             rows.append(btn_row)
             btn_row = []
@@ -443,23 +581,26 @@ def get_cloud_dashboard_markup():
         rows.append(btn_row)
 
     rows.append([
-        {"text": "➕ Создать папку", "callback_data": "cloud_folder_add_prompt"},
-        {"text": "⚙️ Управление папками", "callback_data": "cloud_folder_manage"}
+        {"text": "Поиск в файлах (OCR)", "callback_data": "cloud_ocr_prompt"},
+        {"text": "Zero-Knowledge Сейф", "callback_data": "cloud_crypto_info"}
     ])
-    rows.append([{"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}])
+    rows.append([
+        {"text": "Создать папку", "callback_data": "cloud_folder_add_prompt"},
+        {"text": "Управление папками", "callback_data": "cloud_folder_manage"}
+    ])
+    rows.append([{"text": "« В Главное Меню", "callback_data": "nav_main"}])
     return {"inline_keyboard": rows}
 
 def get_cloud_manage_folders_text():
     cats = get_cloud_categories()
     lines = [
-        "⚙️ <b>УПРАВЛЕНИЕ ПАПКАМИ ОБЛАКА</b>\n",
+        "<b>УПРАВЛЕНИЕ ПАПКАМИ ОБЛАКА</b>\n",
         "Здесь вы можете удалить ненужную папку или изменить её название:\n"
     ]
     for idx, c in enumerate(cats, start=1):
-        icon = get_cloud_category_icon(c)
-        lines.append(f"<b>#{idx}. {icon} {c}</b>")
+        lines.append(f"<b>#{idx}. {c}</b>")
     
-    lines.append("\n💬 <i>Также можно надиктовать голосом:</i>")
+    lines.append("\n<i>Также можно надиктовать голосом:</i>")
     lines.append("• <code>Создай папку Личное</code>")
     lines.append("• <code>Переименуй папку Работа в 615</code>")
     lines.append("• <code>Удали папку Старое</code>")
@@ -469,13 +610,12 @@ def get_cloud_manage_folders_markup():
     cats = get_cloud_categories()
     rows = []
     for c in cats:
-        icon = get_cloud_category_icon(c)
         rows.append([
-            {"text": f"✏️ {c}", "callback_data": f"cf_ren_{c}"},
-            {"text": f"🗑 Удалить", "callback_data": f"cf_del_{c}"}
+            {"text": f"{c}", "callback_data": f"cf_ren_{c}"},
+            {"text": "Удалить", "callback_data": f"cf_del_{c}"}
         ])
-    rows.append([{"text": "➕ Добавить новую папку", "callback_data": "cloud_folder_add_prompt"}])
-    rows.append([{"text": "« 🔙 В Облако", "callback_data": "nav_cloud"}])
+    rows.append([{"text": "Добавить новую папку", "callback_data": "cloud_folder_add_prompt"}])
+    rows.append([{"text": "« В Облако", "callback_data": "nav_cloud"}])
     return {"inline_keyboard": rows}
 
 def get_cloud_list_text(chat_id, category="all"):
@@ -501,21 +641,20 @@ def get_cloud_list_text(chat_id, category="all"):
     }
     cat_title = cat_titles.get(category.lower(), category.upper())
 
-    text = f"☁️ <b>ОБЛАКО: {cat_title}</b> (Лист <b>{curr_page} из {total_pages}</b> • Файлов: <b>{total_items}</b>):\n\n"
+    text = f"<b>ОБЛАКО: {cat_title}</b> (Лист <b>{curr_page} из {total_pages}</b> • Файлов: <b>{total_items}</b>):\n\n"
 
     if not files:
         text += "<i>В этом разделе пока нет сохраненных файлов.</i>\n\n"
     else:
         for f in page_files:
-            icon = get_cloud_category_icon(f.get("category", ""))
             name = html.escape(f.get("original_name", "Файл"))
             size_str = format_file_size(f.get("size_bytes", 0))
             date_str = f.get("date", "")[:16]
             cat_name = f.get("category", "")
-            text += f"{icon} <b>#{f['id']}. {name}</b>\n   • Размер: <code>{size_str}</code> | {date_str}\n   • Ветка: <i>{cat_name}</i>\n\n"
+            text += f"<b>#{f['id']}. {name}</b>\n   • Размер: <code>{size_str}</code> | {date_str}\n   • Ветка: <i>{cat_name}</i>\n\n"
 
     if total_pages > 1:
-        text += f"📄 <i>Страница {curr_page} из {total_pages}</i>"
+        text += f"<i>Страница {curr_page} из {total_pages}</i>"
 
     return text
 
@@ -531,24 +670,23 @@ def get_cloud_list_markup(chat_id, category="all"):
     rows = []
     # Кнопки для каждого файла
     for f in page_files:
-        icon = get_cloud_category_icon(f.get("category", ""))
         fname = f.get("original_name", "Файл")
         short_name = fname[:24] + "..." if len(fname) > 27 else fname
-        rows.append([{"text": f"{icon} #{f['id']} {short_name}", "callback_data": f"cloud_file_{f['id']}"}])
+        rows.append([{"text": f"#{f['id']} {short_name}", "callback_data": f"cloud_file_{f['id']}"}])
 
     # Навигационные кнопки пагинации
     nav_row = []
     if curr_page > 1:
-        nav_row.append({"text": "⬅️ Назад", "callback_data": f"cloud_page_{curr_page-1}"})
+        nav_row.append({"text": "« Назад", "callback_data": f"cloud_page_{curr_page-1}"})
     if curr_page < total_pages:
-        nav_row.append({"text": "Вперед ➡️", "callback_data": f"cloud_page_{curr_page+1}"})
+        nav_row.append({"text": "Вперед »", "callback_data": f"cloud_page_{curr_page+1}"})
     if nav_row:
         rows.append(nav_row)
 
     # Кнопки возврата
     rows.append([
-        {"text": "📂 Все папки", "callback_data": "nav_cloud"},
-        {"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}
+        {"text": "Все папки", "callback_data": "nav_cloud"},
+        {"text": "« В Главное Меню", "callback_data": "nav_main"}
     ])
     return {"inline_keyboard": rows}
 
@@ -569,7 +707,7 @@ def set_cloud_channel(channel_identifier):
     clean_chan = channel_identifier.strip()
     with open(CHANNEL_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump({"channel": clean_chan, "updated": time.strftime("%Y-%m-%d %H:%M:%S")}, f, ensure_ascii=False, indent=2)
-    return True, f"✅ Канал «{clean_chan}» успешно привязан к Облачному хранилищу!"
+    return True, f"Канал «{clean_chan}» успешно привязан к Облачному хранилищу!"
 
 def get_cloud_hashtag(category):
     c = str(category).lower()
@@ -585,28 +723,27 @@ def get_cloud_hashtag(category):
 def get_cloud_file_detail_text(file_id):
     f = get_cloud_file_by_id(file_id)
     if not f:
-        return "⚠️ <b>Файл не найден в базе Облака.</b>"
+        return "<b>Файл не найден в базе Облака.</b>"
     
-    icon = get_cloud_category_icon(f.get("category", ""))
     name = html.escape(f.get("original_name", "Файл"))
     size_str = format_file_size(f.get("size_bytes", 0))
     date_str = f.get("date", "")
     cat_name = f.get("category", "")
     tag = get_cloud_hashtag(cat_name)
     path = f.get("path", "")
-    exists_str = "✅ Доступен" if os.path.exists(path) else "☁️ В Telegram Cloud"
+    exists_str = "Доступен" if os.path.exists(path) else "В Telegram Cloud"
     chan = get_cloud_channel()
     chan_str = f"<code>{chan}</code>" if chan else "<i>не привязан</i>"
 
     text = (
-        f"{icon} <b>УПРАВЛЕНИЕ ФАЙЛОМ #{f['id']}</b>\n\n"
+        f"<b>УПРАВЛЕНИЕ ФАЙЛОМ #{f['id']}</b>\n\n"
         f"• Название: <b>{name}</b>\n"
         f"• Раздел: <code>{cat_name}</code> (хэштег: <b>{tag}</b>)\n"
         f"• Размер: <b>{size_str}</b>\n"
         f"• Дата добавления: <i>{date_str}</i>\n"
         f"• Статус: {exists_str}\n"
         f"• Привязанный канал: {chan_str}\n\n"
-        f"💡 <i>Выберите действие ниже: получить файл в чат или отправить прямо в ваш Telegram-канал c хэштегом!</i>"
+        f"<i>Выберите действие ниже: получить файл в чат или отправить прямо в ваш Telegram-канал c хэштегом!</i>"
     )
     return text
 
@@ -614,11 +751,12 @@ def get_cloud_file_detail_markup(file_id):
     f = get_cloud_file_by_id(file_id)
     return {
         "inline_keyboard": [
-            [{"text": "📥 Отправить мне в Telegram", "callback_data": f"cloud_send_{file_id}"}],
-            [{"text": "📂 Сменить папку", "callback_data": f"cloud_move_pick_{file_id}"}, {"text": "📢 В Telegram-канал", "callback_data": f"cloud_chan_{file_id}"}],
-            [{"text": "🗑 Удалить из Облака", "callback_data": f"cloud_del_{file_id}"}],
-            [{"text": "« 🔙 К списку файлов", "callback_data": "cloud_cat_current"}, {"text": "☁️ В меню Облака", "callback_data": "nav_cloud"}],
-            [{"text": "🎛 В Главное Меню", "callback_data": "nav_main"}]
+            [{"text": "Отправить мне в Telegram", "callback_data": f"cloud_send_{file_id}"}],
+            [{"text": "С авто-удалением (10 мин)", "callback_data": f"cloud_ephem_{file_id}"}, {"text": "Зашифровать E2EE", "callback_data": f"cloud_enc_{file_id}"}],
+            [{"text": "Сменить папку", "callback_data": f"cloud_move_pick_{file_id}"}, {"text": "В Telegram-канал", "callback_data": f"cloud_chan_{file_id}"}],
+            [{"text": "Удалить из Облака", "callback_data": f"cloud_del_{file_id}"}],
+            [{"text": "« К списку файлов", "callback_data": "cloud_cat_current"}, {"text": "« В меню Облака", "callback_data": "nav_cloud"}],
+            [{"text": "« В Главное Меню", "callback_data": "nav_main"}]
         ]
     }
 
@@ -627,14 +765,13 @@ def get_cloud_move_markup(file_id):
     rows = []
     btn_row = []
     for c in cats:
-        icon = get_cloud_category_icon(c)
-        btn_row.append({"text": f"{icon} {c}", "callback_data": f"cloud_move_{file_id}_{c}"})
+        btn_row.append({"text": f"{c}", "callback_data": f"cloud_move_{file_id}_{c}"})
         if len(btn_row) == 2:
             rows.append(btn_row)
             btn_row = []
     if btn_row:
         rows.append(btn_row)
-    rows.append([{"text": "« 🔙 Отмена", "callback_data": f"cloud_file_{file_id}"}])
+    rows.append([{"text": "« Отмена", "callback_data": f"cloud_file_{file_id}"}])
     return {"inline_keyboard": rows}
 
 def handle_cloud_folder_nlp(text):

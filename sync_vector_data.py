@@ -15,27 +15,27 @@ import ssl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 NOTES_FILE = os.path.join(BASE_DIR, "notes.json")
-REMOTE_URL = "https://vector-ai-assistant.onrender.com"
+REMOTE_URL = os.environ.get("VECTOR_REMOTE_URL", "https://vector-ai-assistant-u73o.onrender.com")
 SYNC_SECRET = "vec_sec_99a8b7c6d5e4f3a2b1029384756"
 
 def check_status():
     ctx = ssl.create_default_context()
     url = f"{REMOTE_URL}/api/status"
-    print(f"📡 Проверка статуса облачного Вектора: {url}...")
+    print(f"[*] Проверка статуса облачного Вектора: {url}...")
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "VectorSync/1.0"})
         with urllib.request.urlopen(req, context=ctx, timeout=8) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            print(f"🟢 [ОБЛАКО ОНЛАЙН] Статус: {data.get('status')} | Бот: {data.get('bot')} | Сервис: {data.get('service')}")
+            print(f"[OK] [ОБЛАКО ОНЛАЙН] Статус: {data.get('status')} | Бот: {data.get('bot')} | Сервис: {data.get('service')}")
             return True
     except Exception as e:
-        print(f"🔴 [ОБЛАКО НЕДОСТУПНО] {e}")
+        print(f"[!] [ОБЛАКО НЕДОСТУПНО] {e}")
         return False
 
 def cmd_pull():
     ctx = ssl.create_default_context()
     url = f"{REMOTE_URL}/api/sync_notes?secret={SYNC_SECRET}"
-    print(f"📥 [PULL] Скачивание заметок из облака...")
+    print(f"[*] [PULL] Скачивание заметок из облака...")
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "VectorSync/1.0", "X-Sync-Secret": SYNC_SECRET})
         with urllib.request.urlopen(req, context=ctx, timeout=12) as resp:
@@ -44,10 +44,10 @@ def cmd_pull():
                 notes = data.get("notes", [])
                 with open(NOTES_FILE, "w", encoding="utf-8") as f:
                     json.dump(notes, f, ensure_ascii=False, indent=2)
-                print(f"✅ [PULL УСПЕШНО] Заметок обновлено: {len(notes)}")
+                print(f"[+] [PULL УСПЕШНО] Заметок обновлено: {len(notes)}")
                 return True
     except Exception as e:
-        print(f"❌ [PULL СБОЙ] {e}")
+        print(f"[!] [PULL СБОЙ] {e}")
         return False
 
 def cmd_push():
@@ -60,17 +60,17 @@ def cmd_push():
                 notes = json.load(f)
         except Exception:
             pass
-    print(f"📤 [PUSH] Отправка {len(notes)} заметок в облако...")
+    print(f"[*] [PUSH] Отправка {len(notes)} заметок в облако...")
     try:
         payload = json.dumps({"notes": notes}).encode("utf-8")
         req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "VectorSync/1.0", "X-Sync-Secret": SYNC_SECRET})
         with urllib.request.urlopen(req, context=ctx, timeout=12) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             if data.get("ok"):
-                print("✅ [PUSH УСПЕШНО] Данные синхронизированы в облаке!")
+                print("[+] [PUSH УСПЕШНО] Данные синхронизированы в облаке!")
                 return True
     except Exception as e:
-        print(f"❌ [PUSH СБОЙ] {e}")
+        print(f"[!] [PUSH СБОЙ] {e}")
         return False
 
 if __name__ == "__main__":

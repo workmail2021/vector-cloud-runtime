@@ -2,7 +2,7 @@
 """
 ИИ-ВЕКТОР: Модуль Базы Заметок 5.0 (Notes Engine 5.0).
 Комплексный автономный модуль для управления персональной базой знаний и заметок:
-- Трехуровневая классификация (1_Спорт 🏋️, 2_Работа 🏗, 3_Общее 📁).
+- Трехуровневая классификация (1_Спорт, 2_Работа, 3_Общее).
 - Двусторонняя синхронизация с Markdown-файлами базы знаний.
 - Автоматическая расстановка тегов, извлечение метаданных и полнотекстовый поиск.
 - Атомарное сохранение с резервным копированием (notes.json и data_backup/notes.json).
@@ -36,9 +36,9 @@ CATEGORY_DIR_MAP = {
 }
 
 CATEGORY_ICON_MAP = {
-    "Спорт": "🏋️",
-    "Работа": "🏗",
-    "Общее": "📁"
+    "Спорт": "",
+    "Работа": "",
+    "Общее": ""
 }
 
 SPORT_KEYWORDS = [
@@ -469,7 +469,7 @@ def merge_notes(note_ids, new_category=None):
     if len(target_notes) < 2:
         return False, "Для объединения укажите хотя бы 2 существующие заметки."
 
-    combined_text = "\n\n".join([f"📝 [Заметка #{n['id']} | {n.get('time', '')}]:\n{n['text']}" for n in target_notes])
+    combined_text = "\n\n".join([f"[Заметка #{n['id']} | {n.get('time', '')}]:\n{n['text']}" for n in target_notes])
     first_id = target_notes[0]["id"]
     chosen_category = new_category or target_notes[0].get("category", "Общее")
     
@@ -588,16 +588,16 @@ def get_notes_dashboard_text(chat_id=None, cat_state="overview", is_bulk=False, 
 
     if cat_state == "overview":
         return (
-            "🗂 <b>БАЗА ЗАМЕТОК И БАЗА ЗНАНИЙ (3 НАПРАВЛЕНИЯ)</b>\n\n"
+            "<b>БАЗА ЗАМЕТОК И БАЗА ЗНАНИЙ (3 НАПРАВЛЕНИЯ)</b>\n\n"
             f"Всего заметок в хранилище: <b>{total_notes}</b>\n\n"
-            f"🏋️ <b>Спорт</b>: {cnt_sport} заметок (комплексы, бокс, фармакология, методики)\n"
-            f"🏗 <b>Работа</b>: {cnt_work} заметок (объекты 615-ФЗ, сметы, подрядчики, акты)\n"
-            f"📁 <b>Общее</b>: {cnt_gen} заметок (покупки, личное, пароли, напоминания)\n\n"
-            "💡 <i>Отправьте любой текст или голосовое боту — я сохраню и автоклассифицирую его в нужную категорию.</i>"
+            f"<b>Спорт</b>: {cnt_sport} заметок (комплексы, бокс, фармакология, методики)\n"
+            f"<b>Работа</b>: {cnt_work} заметок (объекты 615-ФЗ, сметы, подрядчики, акты)\n"
+            f"<b>Общее</b>: {cnt_gen} заметок (покупки, личное, пароли, напоминания)\n\n"
+            "<i>Отправьте любой текст или голосовое боту — я сохраню и автоклассифицирую его в нужную категорию.</i>"
         )
 
     cat_name = cat_state
-    icon = CATEGORY_ICON_MAP.get(cat_name, "📁")
+    icon = CATEGORY_ICON_MAP.get(cat_name, "")
     cat_notes = [n for n in notes if n.get("category") == cat_name or (cat_name == "Общее" and n.get("category") not in ["Спорт", "Работа"])]
     
     total_items = len(cat_notes)
@@ -610,7 +610,7 @@ def get_notes_dashboard_text(chat_id=None, cat_state="overview", is_bulk=False, 
     header_mode = " [РЕЖИМ МАССОВОГО ВЫБОРА]" if is_bulk else ""
     text_lines = [
         f"{icon} <b>ПАПКА «{cat_name.upper()}»</b> (Всего: {total_items}){header_mode}\n"
-        f"📄 <i>Страница {curr_page} из {total_pages}</i>\n"
+        f"<i>Страница {curr_page} из {total_pages}</i>\n"
     ]
 
     if not page_notes:
@@ -625,9 +625,9 @@ def get_notes_dashboard_text(chat_id=None, cat_state="overview", is_bulk=False, 
                 
             n_time = n.get("time", "")[:10]
             is_sel = n_id in selected_ids
-            marker = "🔴 [ВЫБРАНА] " if is_sel else ""
+            marker = "[ВЫБРАНА] " if is_sel else ""
             
-            text_lines.append(f"<b>#{n_id}</b> {marker}• <i>{html.escape(first_line)}</i> (📅 {n_time})")
+            text_lines.append(f"<b>#{n_id}</b> {marker}• <i>{html.escape(first_line)}</i> ({n_time})")
 
     if is_bulk:
         text_lines.append(f"\nВыбрано для действия: <b>{len(selected_ids)}</b> шт.")
@@ -649,14 +649,14 @@ def get_notes_dashboard_markup(chat_id=None, cat_state="overview", is_bulk=False
         return {
             "inline_keyboard": [
                 [
-                    {"text": f"🏋️ Спорт ({cnt_sport})", "callback_data": "notes_cat_Спорт"},
-                    {"text": f"🏗 Работа ({cnt_work})", "callback_data": "notes_cat_Работа"}
+                    {"text": f"Спорт ({cnt_sport})", "callback_data": "notes_cat_Спорт"},
+                    {"text": f"Работа ({cnt_work})", "callback_data": "notes_cat_Работа"}
                 ],
                 [
-                    {"text": f"📁 Общее ({cnt_gen})", "callback_data": "notes_cat_Общее"}
+                    {"text": f"Общее ({cnt_gen})", "callback_data": "notes_cat_Общее"}
                 ],
                 [
-                    {"text": "« 🔙 В Меню", "callback_data": "nav_main"}
+                    {"text": "« В Главное Меню", "callback_data": "nav_main"}
                 ]
             ]
         }
@@ -678,7 +678,7 @@ def get_notes_dashboard_markup(chat_id=None, cat_state="overview", is_bulk=False
             sel_buttons = []
             for n in page_notes:
                 is_sel = n["id"] in selected_ids
-                b_text = f"🔴 ☑️ #{n['id']}" if is_sel else f"⬜️ #{n['id']}"
+                b_text = f"[✓] #{n['id']}" if is_sel else f"[ ] #{n['id']}"
                 sel_buttons.append({"text": b_text, "callback_data": f"note_sel_toggle_{n['id']}"})
                 if len(sel_buttons) == 3:
                     rows.append(sel_buttons)
@@ -688,30 +688,30 @@ def get_notes_dashboard_markup(chat_id=None, cat_state="overview", is_bulk=False
 
         if total_pages > 1:
             rows.append([
-                {"text": "◀️ Пред", "callback_data": "note_page_prev"},
-                {"text": f"📄 {curr_page}/{total_pages}", "callback_data": "note_page_noop"},
-                {"text": "След ▶️", "callback_data": "note_page_next"}
+                {"text": "« Пред", "callback_data": "note_page_prev"},
+                {"text": f"{curr_page}/{total_pages}", "callback_data": "note_page_noop"},
+                {"text": "След »", "callback_data": "note_page_next"}
             ])
 
         rows.append([
-            {"text": "🔘 Выбрать все на листе", "callback_data": "note_sel_all_page"},
-            {"text": "🧹 Снять выбор", "callback_data": "note_sel_clear"}
+            {"text": "Выбрать все на листе", "callback_data": "note_sel_all_page"},
+            {"text": "Снять выбор", "callback_data": "note_sel_clear"}
         ])
 
         if len(selected_ids) > 0:
             rows.append([
-                {"text": f"🔥 🗑 УДАЛИТЬ ВЫБРАННЫЕ ({len(selected_ids)} шт)", "callback_data": "note_bulk_delete_confirm"}
+                {"text": f"Удалить выбранные ({len(selected_ids)} шт)", "callback_data": "note_bulk_delete_confirm"}
             ])
 
         rows.append([
-            {"text": "« ❌ Выйти из режима выбора", "callback_data": "note_bulk_mode_off"}
+            {"text": "« Выйти из режима выбора", "callback_data": "note_bulk_mode_off"}
         ])
 
     else:
         if page_notes:
             note_buttons = []
             for n in page_notes:
-                note_buttons.append({"text": f"📝 #{n['id']}", "callback_data": f"note_detail_{n['id']}"})
+                note_buttons.append({"text": f"#{n['id']}", "callback_data": f"note_detail_{n['id']}"})
                 if len(note_buttons) == 3:
                     rows.append(note_buttons)
                     note_buttons = []
@@ -720,18 +720,18 @@ def get_notes_dashboard_markup(chat_id=None, cat_state="overview", is_bulk=False
 
         if total_pages > 1:
             rows.append([
-                {"text": "◀️ Назад", "callback_data": "note_page_prev"},
-                {"text": f"📄 {curr_page} / {total_pages}", "callback_data": "note_page_noop"},
-                {"text": "Вперед ▶️", "callback_data": "note_page_next"}
+                {"text": "« Назад", "callback_data": "note_page_prev"},
+                {"text": f"{curr_page} / {total_pages}", "callback_data": "note_page_noop"},
+                {"text": "Вперед »", "callback_data": "note_page_next"}
             ])
 
         rows.append([
-            {"text": "🗑 Выбрать и удалить несколько", "callback_data": "note_bulk_mode_on"}
+            {"text": "Выбрать и удалить несколько", "callback_data": "note_bulk_mode_on"}
         ])
 
         rows.append([
-            {"text": "📂 « Назад к Папкам", "callback_data": "notes_back_to_folders"},
-            {"text": "« 🔙 Главное Меню", "callback_data": "nav_main"}
+            {"text": "« Назад к Папкам", "callback_data": "notes_back_to_folders"},
+            {"text": "« В Главное Меню", "callback_data": "nav_main"}
         ])
 
     return {"inline_keyboard": rows}
@@ -740,20 +740,20 @@ def get_note_detail_text(note_id):
     """Возвращает детальный HTML-текст отдельной заметки."""
     note = get_note_by_id(note_id)
     if not note:
-        return "❌ <b>Заметка не найдена.</b>"
+        return "<b>Заметка не найдена.</b>"
         
     n_id = note["id"]
     cat = note.get("category", "Общее")
-    icon = CATEGORY_ICON_MAP.get(cat, "📁")
+    icon = CATEGORY_ICON_MAP.get(cat, "")
     created = note.get("time", "")
     n_type = note.get("type", "текст")
     raw_text = note.get("text", "")
     tags = note.get("tags") or extract_tags_from_text(raw_text)
-    tags_str = ("\n🏷 <b>Теги:</b> " + ", ".join([f"#{t}" for t in tags])) if tags else ""
+    tags_str = ("\n<b>Теги:</b> " + ", ".join([f"#{t}" for t in tags])) if tags else ""
 
     return (
         f"{icon} <b>ЗАМЕТКА #{n_id}</b> [{cat}]\n"
-        f"📅 <b>Дата:</b> {created} | <b>Тип:</b> {n_type}{tags_str}\n"
+        f"<b>Дата:</b> {created} | <b>Тип:</b> {n_type}{tags_str}\n"
         f"────────────────────\n\n"
         f"{html.escape(raw_text)}\n\n"
         f"────────────────────"
@@ -771,16 +771,16 @@ def get_note_detail_markup(note_id):
     return {
         "inline_keyboard": [
             [
-                {"text": "📁 Сменить папку", "callback_data": f"note_move_prompt_{n_id}"},
-                {"text": "📋 Скопировать текст", "callback_data": f"note_send_raw_{n_id}"}
+                {"text": "Сменить папку", "callback_data": f"note_move_prompt_{n_id}"},
+                {"text": "Скопировать текст", "callback_data": f"note_send_raw_{n_id}"}
             ],
             [
-                {"text": "➕ Дописать в заметку", "callback_data": f"note_append_hint_{n_id}"},
-                {"text": "🗑 Удалить эту заметку", "callback_data": f"note_delete_{n_id}"}
+                {"text": "Дописать в заметку", "callback_data": f"note_append_hint_{n_id}"},
+                {"text": "Удалить эту заметку", "callback_data": f"note_delete_{n_id}"}
             ],
             [
-                {"text": f"« 🔙 В папку [{cat}]", "callback_data": f"notes_cat_{cat}"},
-                {"text": "🎛 В Главное Меню", "callback_data": "nav_main"}
+                {"text": f"« В папку [{cat}]", "callback_data": f"notes_cat_{cat}"},
+                {"text": "« В Главное Меню", "callback_data": "nav_main"}
             ]
         ]
     }
@@ -846,16 +846,16 @@ def main():
             
         print(f"=== БАЗА ЗАМЕТОК ({len(notes)} шт.) ===")
         for n in notes:
-            icon = CATEGORY_ICON_MAP.get(n.get("category"), "📁")
+            icon = CATEGORY_ICON_MAP.get(n.get("category"), "")
             first_line = n["text"].split("\n")[0][:70]
             print(f"#{n['id']:03d} [{icon} {n.get('category', 'Общее'):<6}] ({n.get('time', '')[:10]}): {first_line}")
 
     elif args.command == "get":
         n = get_note_by_id(args.id)
         if not n:
-            print(f"❌ Заметка #{args.id} не найдена.")
+            print(f"[!] Заметка #{args.id} не найдена.")
             sys.exit(1)
-        icon = CATEGORY_ICON_MAP.get(n.get("category"), "📁")
+        icon = CATEGORY_ICON_MAP.get(n.get("category"), "")
         print(f"=== {icon} ЗАМЕТКА #{n['id']} [{n.get('category')}] ===")
         print(f"Дата: {n.get('time', '')} | Тип: {n.get('type', 'текст')}")
         if n.get("tags"):
@@ -868,33 +868,33 @@ def main():
 
     elif args.command == "add":
         new_note = add_note(args.text, note_type=args.type, category=args.category)
-        print(f"✅ Создана заметка #{new_note['id']} [{new_note['category']}]:")
+        print(f"[+] Создана заметка #{new_note['id']} [{new_note['category']}]:")
         print(new_note['text'])
 
     elif args.command == "append":
         ok, n = append_text_to_note(args.id, args.text)
         if ok:
-            print(f"✅ Заметка #{args.id} успешно дополнена.")
+            print(f"[+] Заметка #{args.id} успешно дополнена.")
         else:
-            print(f"❌ Заметка #{args.id} не найдена.")
+            print(f"[!] Заметка #{args.id} не найдена.")
 
     elif args.command == "search":
         results = search_notes(args.query, category=args.category)
         print(f"=== РЕЗУЛЬТАТЫ ПОИСКА «{args.query}» ({len(results)} шт.) ===")
         for n in results:
-            icon = CATEGORY_ICON_MAP.get(n.get("category"), "📁")
+            icon = CATEGORY_ICON_MAP.get(n.get("category"), "")
             first_line = n["text"].split("\n")[0][:70]
             print(f"#{n['id']:03d} [{icon} {n.get('category', 'Общее')}] ({n.get('time', '')[:10]}): {first_line}")
 
     elif args.command == "delete":
         if len(args.id) == 1:
             if delete_single_note(args.id[0]):
-                print(f"✅ Заметка #{args.id[0]} успешно удалена.")
+                print(f"[+] Заметка #{args.id[0]} успешно удалена.")
             else:
-                print(f"❌ Заметка #{args.id[0]} не найдена.")
+                print(f"[!] Заметка #{args.id[0]} не найдена.")
         else:
             del_ids = delete_multiple_notes(args.id)
-            print(f"✅ Удалены заметки: {del_ids}")
+            print(f"[+] Удалены заметки: {del_ids}")
 
     elif args.command == "merge":
         ok, msg = merge_notes(args.ids)
@@ -902,15 +902,15 @@ def main():
 
     elif args.command == "sync":
         cnt = sync_all_markdown_files()
-        print(f"✅ Успешно синхронизировано {cnt} заметок в каталоге База_Заметок.")
+        print(f"[+] Успешно синхронизировано {cnt} заметок в каталоге База_Заметок.")
 
     elif args.command == "stats":
         st = get_notes_stats()
         print("=== СТАТИСТИКА БАЗЫ ЗАМЕТОК ===")
         print(f"Всего заметок: {st['total']}")
-        print(f"🏋️ Спорт:     {st['sport']}")
-        print(f"🏗 Работа:    {st['work']}")
-        print(f"📁 Общее:     {st['general']}")
+        print(f"Спорт:     {st['sport']}")
+        print(f"Работа:    {st['work']}")
+        print(f"Общее:     {st['general']}")
         if st['top_tags']:
             print("Топ тегов:")
             for tag, count in st['top_tags']:

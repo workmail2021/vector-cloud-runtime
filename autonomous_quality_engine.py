@@ -39,7 +39,7 @@ def load_quality_metrics():
             "gemini-pro": 0,
             "auto": 0
         },
-        "health_status": "🟢 100% Штатный боевой режим",
+        "health_status": "[ШТАТНЫЙ РЕЖИМ] 100% Готовность",
         "last_health_check": None
     }
     if os.path.exists(METRICS_FILE):
@@ -101,27 +101,27 @@ def run_ai_self_healing_audit():
     try:
         req = urllib.request.Request("https://api.telegram.org", headers={"User-Agent": "VectorWatchdog/5.0"})
         with urllib.request.urlopen(req, timeout=5) as resp:
-            status_report.append("• Сеть Telegram API: 🟢 <b>Доступна (100% OK)</b>")
+            status_report.append("• Сеть Telegram API: [OK] <b>Доступна (100%)</b>")
     except Exception as e:
-        status_report.append(f"• Сеть Telegram API: 🔴 <b>Сбой: {e}</b>")
+        status_report.append(f"• Сеть Telegram API: [СБОЙ] <b>{e}</b>")
         has_issues = True
 
     # 2. Проверка Google Gemini Core (agy)
     agy_bin = "/home/home/.local/bin/agy"
     if os.path.exists(agy_bin):
-        status_report.append("• Движок Google Gemini 3.7 Flash High: 🟢 <b>Готов к генерации</b>")
+        status_report.append("• Движок Google Gemini 3.8 Flash: [OK] <b>Готов к генерации</b>")
     else:
-        status_report.append("• Движок Google Gemini 3.7 Flash High: 🟡 <b>Резервный режим</b>")
+        status_report.append("• Движок Google Gemini 3.8 Flash: [РЕЗЕРВ] <b>Резервный режим</b>")
 
     # 3. Анализ недавних ошибок
     recent_errs = get_recent_errors(limit=3)
     if recent_errs:
         status_report.append(f"• Зафиксировано недавних инцидентов: <b>{len(recent_errs)}</b> (автоматически устранены)")
     else:
-        status_report.append("• Критических ошибок в логах: 🟢 <b>0 инцидентов</b>")
+        status_report.append("• Критических ошибок в логах: [OK] <b>0 инцидентов</b>")
 
     m = load_quality_metrics()
-    m["health_status"] = "🟢 100% Штатный режим" if not has_issues else "🟡 Режим авто-восстановления"
+    m["health_status"] = "[ШТАТНЫЙ РЕЖИМ] 100% Готовность" if not has_issues else "[АВТО-ВОССТАНОВЛЕНИЕ] Режим защиты"
     m["last_health_check"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     save_quality_metrics(m)
 
@@ -137,20 +137,20 @@ def get_autonomous_quality_dashboard():
     uptime_pct = round((success / total * 100), 1) if total > 0 else 100.0
 
     return (
-        "🛡 <b>АВТОНОМНЫЙ КОНТРОЛЬ КАЧЕСТВА И САМОВОССТАНОВЛЕНИЕ (24/7):</b>\n\n"
-        f"📊 <b>Статус экосистемы:</b> <b>{m.get('health_status')}</b>\n"
-        f"⏱ <b>Последний аудит:</b> <code>{m.get('last_health_check', 'Только что')}</code>\n\n"
-        "📈 <b>Метрики качества диалогов:</b>\n"
+        "<b>[ВЕКТОР: КОНТРОЛЬ КАЧЕСТВА И САМОВОССТАНОВЛЕНИЕ 24/7]</b>\n\n"
+        f"<b>Статус экосистемы:</b> <b>{m.get('health_status')}</b>\n"
+        f"<b>Последний аудит:</b> <code>{m.get('last_health_check', 'Только что')}</code>\n\n"
+        "<b>Метрики качества диалогов:</b>\n"
         f"• Всего обращений сегодня: <b>{total}</b> (Владелец: <b>{m.get('owner_dialogs', 0)}</b>, Гости: <b>{m.get('guest_dialogs', 0)}</b>)\n"
         f"• Успешных ответов ИИ: <b>{success}</b> (Уровень надежности: <b>{uptime_pct}%</b>)\n"
         f"• Авто-исправлений/Fallback: <b>{m.get('auto_healed_events', 0)}</b>\n"
         f"• Средняя скорость генерации: <b>~{m.get('avg_latency_ms', 1200) / 1000:.1f} сек.</b>\n\n"
-        "🤖 <b>Распределение по моделям:</b>\n"
-        f"• 🌙 GPT-5.6 Luna: <b>{m['model_usage'].get('gpt-5.6-luna', 0)}</b>\n"
-        f"• 💎 Gemini 3.7 Flash: <b>{m['model_usage'].get('gemini-3.7-flash', 0)}</b>\n"
-        f"• 🧠 OpenAI o1: <b>{m['model_usage'].get('o1', 0)}</b>\n\n"
-        f"🔍 <b>Диагностика системных шлюзов:</b>\n{health_text}\n\n"
-        "💡 <i>Система непрерывно следит за доступностью нейросетей и автоматически переключается на резервный канал при любых задержках или сбоях API.</i>"
+        "<b>Распределение по моделям:</b>\n"
+        f"• GPT-5.6 Luna: <b>{m['model_usage'].get('gpt-5.6-luna', 0)}</b>\n"
+        f"• Gemini 3.8 Flash: <b>{m['model_usage'].get('gemini-3.7-flash', 0)}</b>\n"
+        f"• OpenAI o1: <b>{m['model_usage'].get('o1', 0)}</b>\n\n"
+        f"<b>Диагностика системных шлюзов:</b>\n{health_text}\n\n"
+        "<i>[INFO] Система непрерывно следит за доступностью нейросетей и автоматически переключается на резервный канал при любых задержках или сбоях API.</i>"
     )
 
 if __name__ == "__main__":

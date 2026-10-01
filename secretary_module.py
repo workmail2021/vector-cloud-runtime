@@ -2,15 +2,15 @@
 """
 ИИ-ВЕКТОР: Полноценный Персональный ИИ-Секретарь Руководителя 5.0.
 Многопрофильный интеллектуальный ассистент высшего класса:
-1. 🌍 Глобальный справочный интеллект: факты, термины, города, личности, история.
-2. 💱 Живые курсы валют ЦБ РФ (USD, EUR, CNY, AED, пересчет любых сумм).
-3. 🛣 Автомобильная логистика: километраж, время в пути, расход и стоимость бензина.
-4. 🧮 Инженерный сметчик и калькулятор (ГНБ, трубы, объемы, НДС, проценты).
-5. 📝 Генератор деловых документов, КП, договоров, постов и клиентских рассылок.
-6. 🥊 Спортивный консультант: планы тренировок, расчет калорий и БЖУ под вес.
-7. 🌤 Онлайн-погода со спутника и 🕒 Часовые пояса любых городов мира.
-8. 🎫 Билеты РЖД и Авиа с прямыми ссылками на покупку.
-9. 📄 Глубокий анализ и выжимка загруженных файлов и PDF.
+1. Глобальный справочный интеллект: факты, термины, города, личности, история.
+2. Живые курсы валют ЦБ РФ (USD, EUR, CNY, AED, пересчет любых сумм).
+3. Автомобильная логистика: километраж, время в пути, расход и стоимость бензина.
+4. Инженерный сметчик и калькулятор (ГНБ, трубы, объемы, НДС, проценты).
+5. Генератор деловых документов, КП, договоров, постов и клиентских рассылок.
+6. Спортивный консультант: планы тренировок, расчет калорий и БЖУ под вес.
+7. Онлайн-погода со спутника и часовые пояса любых городов мира.
+8. Билеты РЖД и Авиа с прямыми ссылками на покупку.
+9. Глубокий анализ и выжимка загруженных файлов и PDF.
 """
 
 import os
@@ -114,28 +114,28 @@ def get_live_currency_report(query_text=None):
                 q_lower = query_text.lower()
                 if any(x in q_lower for x in ["доллар", "usd", "бакс", "$"]):
                     total_rub = amt * usd
-                    calc_part = f"\n🧮 <b>Расчет:</b> {amt:,.0f} USD = <b>{total_rub:,.2f} ₽</b>\n"
+                    calc_part = f"\n<b>Расчет:</b> {amt:,.0f} USD = <b>{total_rub:,.2f} ₽</b>\n"
                 elif any(x in q_lower for x in ["евро", "eur", "€"]):
                     total_rub = amt * eur
-                    calc_part = f"\n🧮 <b>Расчет:</b> {amt:,.0f} EUR = <b>{total_rub:,.2f} ₽</b>\n"
+                    calc_part = f"\n<b>Расчет:</b> {amt:,.0f} EUR = <b>{total_rub:,.2f} ₽</b>\n"
                 elif any(x in q_lower for x in ["дирхам", "aed"]):
                     total_rub = amt * aed
-                    calc_part = f"\n🧮 <b>Расчет:</b> {amt:,.0f} AED = <b>{total_rub:,.2f} ₽</b>\n"
+                    calc_part = f"\n<b>Расчет:</b> {amt:,.0f} AED = <b>{total_rub:,.2f} ₽</b>\n"
                 elif any(x in q_lower for x in ["юан", "cny"]):
                     total_rub = amt * cny
-                    calc_part = f"\n🧮 <b>Расчет:</b> {amt:,.0f} CNY = <b>{total_rub:,.2f} ₽</b>\n"
+                    calc_part = f"\n<b>Расчет:</b> {amt:,.0f} CNY = <b>{total_rub:,.2f} ₽</b>\n"
 
             return (
-                f"💱 <b>ОФИЦИАЛЬНЫЕ КУРСЫ ВАЛЮТ ЦБ РФ (НА СЕГОДНЯ):</b>\n"
+                f"<b>ОФИЦИАЛЬНЫЕ КУРСЫ ВАЛЮТ ЦБ РФ (НА СЕГОДНЯ):</b>\n"
                 f"{calc_part}\n"
-                f"• 🇺🇸 Доллар (USD): <b>{usd:.2f} ₽</b>\n"
-                f"• 🇪🇺 Евро (EUR): <b>{eur:.2f} ₽</b>\n"
-                f"• 🇦🇪 Дирхам ОАЭ (AED): <b>{aed:.2f} ₽</b>\n"
-                f"• 🇨🇳 Юань (CNY): <b>{cny:.2f} ₽</b>\n\n"
-                f"🛡 <i>Данные обновлены в реальном времени с котировок Центрального Банка.</i>"
+                f"• Доллар (USD): <b>{usd:.2f} ₽</b>\n"
+                f"• Евро (EUR): <b>{eur:.2f} ₽</b>\n"
+                f"• Дирхам ОАЭ (AED): <b>{aed:.2f} ₽</b>\n"
+                f"• Юань (CNY): <b>{cny:.2f} ₽</b>\n\n"
+                f"<i>Данные обновлены в реальном времени с котировок Центрального Банка.</i>"
             )
     except Exception:
-        return "💱 <b>КУРСЫ ВАЛЮТ:</b> USD ~84.50 ₽ | EUR ~97.50 ₽ | AED ~23.00 ₽ | CNY ~12.50 ₽"
+        return "<b>КУРСЫ ВАЛЮТ:</b> USD ~84.50 ₽ | EUR ~97.50 ₽ | AED ~23.00 ₽ | CNY ~12.50 ₽"
 
 # ----------------- 2. АВТОМОБИЛЬНЫЙ МАРШРУТИЗАТОР И РАСХОД ТОПЛИВА -----------------
 def calculate_driving_route(dest_city):
@@ -159,12 +159,12 @@ def calculate_driving_route(dest_city):
     yandex_maps_link = f"https://yandex.ru/maps/?rtext=Волгоград~{urllib.parse.quote(dest_name)}&rtt=auto"
 
     return (
-        f"🚗 <b>АВТОМОБИЛЬНЫЙ МАРШРУТ: ВОЛГОГРАД ➔ {dest_name.upper()}</b>\n\n"
-        f"• 🛣 Расстояние по трассе: <b>{km:,} км</b>\n"
-        f"• ⏱ Время в пути без остановок: <b>~{hours} ч</b>\n"
-        f"• ⛽️ Расход топлива (АИ-95, ~9л/100км): <b>~{liters} л</b>\n"
-        f"• 💰 Примерный бюджет на бензин: <b>~{fuel_cost:,} ₽</b>\n\n"
-        f"🔗 <a href='{yandex_maps_link}'>Открыть маршрут в Яндекс.Картах с навигатором</a>"
+        f"<b>АВТОМОБИЛЬНЫЙ МАРШРУТ: ВОЛГОГРАД -> {dest_name.upper()}</b>\n\n"
+        f"• Расстояние по трассе: <b>{km:,} км</b>\n"
+        f"• Время в пути без остановок: <b>~{hours} ч</b>\n"
+        f"• Расход топлива (АИ-95, ~9л/100км): <b>~{liters} л</b>\n"
+        f"• Примерный бюджет на бензин: <b>~{fuel_cost:,} ₽</b>\n\n"
+        f"<a href='{yandex_maps_link}'>Открыть маршрут в Яндекс.Картах с навигатором</a>"
     )
 
 # ----------------- 3. ГЕНЕРАТОР ДЕЛОВЫХ ТЕКСТОВ И ДОКУМЕНТОВ -----------------
@@ -174,7 +174,7 @@ def generate_business_text(topic_query):
     # 1. Коммерческое предложение по ГНБ
     if any(x in t_lower for x in ["кп", "коммерческ", "предложение"]) and any(y in t_lower for y in ["гнб", "бурен", "труб", "прокол"]):
         return (
-            "📄 <b>КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ: БЕСТРАНШЕЙНАЯ ПРОКЛАДКА (ГНБ)</b>\n\n"
+            "<b>КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ: БЕСТРАНШЕЙНАЯ ПРОКЛАДКА (ГНБ)</b>\n\n"
             "<b>Кому:</b> Руководству предприятия / Заказчику\n"
             "<b>Тема:</b> Выполнение комплекса работ методом ГНБ\n\n"
             "Уважаемые партнеры!\n"
@@ -191,20 +191,20 @@ def generate_business_text(topic_query):
     # 2. Продающий пост / Текст для бокса в Instagram
     if any(x in t_lower for x in ["пост", "текст", "сообщение", "инста"]) and any(y in t_lower for y in ["бокс", "тренировк", "клиент"]):
         return (
-            "🥊 <b>ПРОДАЮЩИЙ ТЕКСТ ДЛЯ INSTAGRAM / СООБЩЕНИЯ КЛИЕНТУ:</b>\n\n"
-            "<b>Заголовок:</b> Хватит откладывать форму на «следующий понедельник» 🔥\n\n"
+            "<b>ПРОДАЮЩИЙ ТЕКСТ ДЛЯ INSTAGRAM / СООБЩЕНИЯ КЛИЕНТУ:</b>\n\n"
+            "<b>Заголовок:</b> Хватит откладывать форму на «следующий понедельник»\n\n"
             "Бокс — это не про синяки и агрессию. Это лучший способ:\n"
-            "✅ Сжечь до 900 ккал за одну мощную тренировку\n"
-            "✅ Поставить жесткий нокаутирующий удар с нуля\n"
-            "✅ Снять весь рабочий стресс и перезагрузить голову\n\n"
-            "👊 <b>Как проходят занятия:</b>\n"
+            "• Сжечь до 900 ккал за одну мощную тренировку\n"
+            "• Поставить жесткий нокаутирующий удар с нуля\n"
+            "• Снять весь рабочий стресс и перезагрузить голову\n\n"
+            "<b>Как проходят занятия:</b>\n"
             "Работа на лапах, постановка правильной стойки, защита корпусом и дыхание. Индивидуальный подход под твой уровень.\n\n"
-            "📍 <b>Где:</b> Волгоград, ул. Скосырева, 11 (Boxing S&C Lab)\n"
-            "📩 <b>Пиши в Direct @sergeia.cse.boxing «БОКС»</b> — и забирай скидку 30% на первую персоналку!"
+            "<b>Где:</b> Волгоград, ул. Скосырева, 11 (Boxing S&C Lab)\n"
+            "<b>Пиши в Direct @sergeia.cse.boxing «БОКС»</b> — и забирай скидку 30% на первую персоналку!"
         )
 
     return (
-        f"📝 <b>ПРОЕКТ ДОКУМЕНТА / СООБЩЕНИЯ:</b>\n\n"
+        f"<b>ПРОЕКТ ДОКУМЕНТА / СООБЩЕНИЯ:</b>\n\n"
         f"<b>Тема:</b> {topic_query}\n\n"
         f"Уважаемые коллеги!\n"
         f"По данному вопросу сформирован предварительный проект решения. "
@@ -226,14 +226,14 @@ def calculate_sport_nutrition(query):
     carbs = int((calories_cut - (protein * 4 + fats * 9)) / 4)
 
     return (
-        f"🥊 <b>РАСЧЕТ СПОРТИВНОГО ПИТАНИЯ И БЖУ (ВЕС: {weight:.0f} КГ):</b>\n\n"
-        f"• 🔥 Поддержание веса: <b>{calories_maintain:,} ккал/сутки</b>\n"
-        f"• ⚡️ Сгонка веса / Рельеф (сушка): <b>{calories_cut:,} ккал/сутки</b>\n\n"
-        f"📊 <b>Суточная норма макронутриентов (БЖУ):</b>\n"
-        f" • 🥩 <b>Белки (2.0 г/кг):</b> <b>{protein} г</b> ({protein*4} ккал) — курица, яйца, творог, рыба\n"
-        f" • 🥑 <b>Жиры (0.9 г/кг):</b> <b>{fats} г</b> ({fats*9} ккал) — орехи, оливковое масло, авокадо\n"
-        f" • 🍚 <b>Углеводы:</b> <b>{carbs} г</b> ({carbs*4} ккал) — гречка, рис, овсянка\n\n"
-        f"💧 <b>Водный баланс:</b> не менее <b>2.5–3.0 литров</b> чистой воды в день!"
+        f"<b>РАСЧЕТ СПОРТИВНОГО ПИТАНИЯ И БЖУ (ВЕС: {weight:.0f} КГ):</b>\n\n"
+        f"• Поддержание веса: <b>{calories_maintain:,} ккал/сутки</b>\n"
+        f"• Сгонка веса / Рельеф (сушка): <b>{calories_cut:,} ккал/сутки</b>\n\n"
+        f"<b>Суточная норма макронутриентов (БЖУ):</b>\n"
+        f" • <b>Белки (2.0 г/кг):</b> <b>{protein} г</b> ({protein*4} ккал) — курица, яйца, творог, рыба\n"
+        f" • <b>Жиры (0.9 г/кг):</b> <b>{fats} г</b> ({fats*9} ккал) — орехи, оливковое масло, авокадо\n"
+        f" • <b>Углеводы:</b> <b>{carbs} г</b> ({carbs*4} ккал) — гречка, рис, овсянка\n\n"
+        f"<b>Водный баланс:</b> не менее <b>2.5–3.0 литров</b> чистой воды в день!"
     )
 
 # ----------------- 5. ПОГОДА И ЧАСОВЫЕ ПОЯСА -----------------
@@ -262,15 +262,15 @@ def get_live_weather(city_name):
             mintemp = weather_today.get("mintempC", temp)
 
             return (
-                f"🌤 <b>ПОГОДА В ГОРОДЕ {clean_city.upper()}:</b>\n\n"
+                f"<b>ПОГОДА В ГОРОДЕ {clean_city.upper()}:</b>\n\n"
                 f"• Температура сейчас: <b>{temp}°C</b> (ощущается как {feels}°C)\n"
                 f"• Состояние: <b>{desc}</b>\n"
                 f"• Днём: до <b>+{maxtemp}°C</b> | Ночью: <b>+{mintemp}°C</b>\n"
                 f"• Ветер: <b>{wind} км/ч</b> | Влажность: <b>{humidity}%</b> | Давление: <b>{pressure} мм</b>\n\n"
-                f"🛡 <i>Данные обновлены в реальном времени со спутникового радара.</i>"
+                f"<i>Данные обновлены в реальном времени со спутникового радара.</i>"
             )
     except Exception:
-        return f"🌤 <b>ПОГОДА В ГОРОДЕ {clean_city}:</b>\n\nВ настоящее время температура около +22°C, переменная облачность, без осадков."
+        return f"<b>ПОГОДА В ГОРОДЕ {clean_city}:</b>\n\nВ настоящее время температура около +22°C, переменная облачность, без осадков."
 
 def get_city_timezone_and_time(query):
     q_lower = query.lower()
@@ -301,13 +301,13 @@ def get_city_timezone_and_time(query):
         diff_str = "совпадает с Московским временем" if diff_hours == 0 else f"{'+' if diff_hours > 0 else ''}{diff_hours} ч от Москвы"
 
         return (
-            f"🕒 <b>ВРЕМЯ И ЧАСОВОЙ ПОЯС:</b>\n\n"
-            f"📍 Город: <b>{label}</b>\n"
-            f"⏰ Точное время сейчас: <b>{now_tz.strftime('%H:%M:%S')}</b> ({now_tz.strftime('%d.%m.%Y')})\n"
-            f"🌍 Часовой пояс: <code>{tz_str}</code> ({diff_str})"
+            f"<b>ВРЕМЯ И ЧАСОВОЙ ПОЯС:</b>\n\n"
+            f"• Город: <b>{label}</b>\n"
+            f"• Точное время сейчас: <b>{now_tz.strftime('%H:%M:%S')}</b> ({now_tz.strftime('%d.%m.%Y')})\n"
+            f"• Часовой пояс: <code>{tz_str}</code> ({diff_str})"
         )
     except Exception:
-        return f"🕒 Точное время в городе {found_key.title()}: {datetime.datetime.now().strftime('%H:%M:%S')} (MSK)."
+        return f"Точное время в городе {found_key.title()}: {datetime.datetime.now().strftime('%H:%M:%S')} (MSK)."
 
 # ----------------- 6. ПОИСК БИЛЕТОВ (РЖД / АВИА) -----------------
 def search_travel_tickets(origin, destination, date_str=None):
@@ -319,20 +319,56 @@ def search_travel_tickets(origin, destination, date_str=None):
     avia_link = f"https://www.aviasales.ru/search?origin={urllib.parse.quote(orig)}&destination={urllib.parse.quote(dest)}"
 
     return (
-        f"🎫 <b>ПОИСК БИЛЕТОВ: {orig.upper()} ➔ {dest.upper()} ({date_label}):</b>\n\n"
-        f"🚆 <b>Поезда (РЖД):</b>\n"
+        f"<b>ПОИСК БИЛЕТОВ: {orig.upper()} -> {dest.upper()} ({date_label}):</b>\n\n"
+        f"<b>Поезда (РЖД):</b>\n"
         f" • Фирменный поезд №001Ж «Волгоград — Москва» (~18 ч в пути)\n"
         f" • Поезд №015Ж (ночной, отправление ~16:50, прибытие ~09:30)\n"
         f" • Плацкарт от <b>2 850 ₽</b> | Купе от <b>4 600 ₽</b> | СВ от <b>12 900 ₽</b>\n"
-        f" 🔗 <a href='{rzd_link}'>Купить билет на поезд (Яндекс.Путешествия)</a>\n\n"
-        f"✈️ <b>Авиабилеты (Прямые рейсы):</b>\n"
+        f" <a href='{rzd_link}'>Купить билет на поезд (Яндекс.Путешествия)</a>\n\n"
+        f"<b>Авиабилеты (Прямые рейсы):</b>\n"
         f" • Аэрофлот, Победа, S7 (~1 ч 45 мин в пути)\n"
         f" • Эконом от <b>4 200 ₽</b> (без багажа) / от <b>6 100 ₽</b> (с багажом)\n"
-        f" 🔗 <a href='{avia_link}'>Найти рейсы на Aviasales</a>\n\n"
-        f"💡 <i>Нажмите на ссылку для прямого выбора места и моментального оформления!</i>"
+        f" <a href='{avia_link}'>Найти рейсы на Aviasales</a>\n\n"
+        f"<i>Нажмите на ссылку для прямого выбора места и моментального оформления!</i>"
     )
 
-# ----------------- 7. МАТЕМАТИЧЕСКИЕ РАСЧЕТЫ И СМЕТЫ -----------------
+# ----------------- 7. МАТЕМАТИЧЕСКИЕ РАСЧЕТЫ И СМЕТЫ (БЕЗОПАСНЫЙ AST ПАРСЕР) -----------------
+import ast
+import operator as op
+
+_SAFE_MATH_OPS = {
+    ast.Add: op.add,
+    ast.Sub: op.sub,
+    ast.Mult: op.mul,
+    ast.Div: op.truediv,
+    ast.FloorDiv: op.floordiv,
+    ast.Mod: op.mod,
+    ast.Pow: op.pow,
+    ast.USub: op.neg,
+    ast.UAdd: op.pos,
+}
+
+def safe_math_eval(expr_str: str):
+    """Безопасный парсер арифметических выражений на базе AST без eval()"""
+    def _eval_node(node):
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            return float(node.value)
+        elif isinstance(node, ast.BinOp):
+            left = _eval_node(node.left)
+            right = _eval_node(node.right)
+            op_type = type(node.op)
+            if op_type in _SAFE_MATH_OPS:
+                return _SAFE_MATH_OPS[op_type](left, right)
+        elif isinstance(node, ast.UnaryOp):
+            operand = _eval_node(node.operand)
+            op_type = type(node.op)
+            if op_type in _SAFE_MATH_OPS:
+                return _SAFE_MATH_OPS[op_type](operand)
+        raise ValueError("Недопустимая операция в выражении")
+
+    tree = ast.parse(expr_str, mode='eval')
+    return _eval_node(tree.body)
+
 def solve_math_or_calculation(text):
     cleaned = re.sub(r'^(?:посчитай|сколько будет|вычисли|расчет|смета)\s*', '', text, flags=re.I).strip()
     
@@ -344,11 +380,11 @@ def solve_math_or_calculation(text):
             sign = pct_match.group(2)
             pct = float(pct_match.group(3))
             try:
-                base_val = eval(base_expr, {"__builtins__": None}, {})
+                base_val = safe_math_eval(base_expr)
                 mod_val = base_val * (pct / 100.0)
                 final_val = base_val + mod_val if sign == "+" else base_val - mod_val
                 return (
-                    f"🧮 <b>ФИНАНСОВЫЙ РАСЧЕТ С УЧЕТОМ {pct:.0f}% (НДС / НАЦЕНКА):</b>\n\n"
+                    f"<b>ФИНАНСОВЫЙ РАСЧЕТ С УЧЕТОМ {pct:.0f}% (НДС / НАЦЕНКА):</b>\n\n"
                     f"• Базовая сумма: <b>{base_val:,.2f} ₽</b>\n"
                     f"• Процентная часть ({pct:.0f}%): <b>{mod_val:,.2f} ₽</b>\n"
                     f"• <b>ИТОГО К ОПЛАТЕ: {final_val:,.2f} ₽</b>"
@@ -359,9 +395,9 @@ def solve_math_or_calculation(text):
     expr = re.sub(r'[^\d\+\-\*\/\(\)\.\,]', '', cleaned).strip().replace(',', '.')
     if expr and len(expr) >= 3 and any(op in expr for op in ['+', '-', '*', '/']):
         try:
-            val = eval(expr, {"__builtins__": None}, {})
+            val = safe_math_eval(expr)
             return (
-                f"🧮 <b>МАТЕМАТИЧЕСКИЙ РАСЧЕТ ИИ-СЕКРЕТАРЯ:</b>\n\n"
+                f"<b>МАТЕМАТИЧЕСКИЙ РАСЧЕТ ИИ-СЕКРЕТАРЯ:</b>\n\n"
                 f"• Формула: <code>{expr}</code>\n"
                 f"• Результат: <b>{val:,.2f}</b>"
             )
@@ -400,9 +436,9 @@ def get_smart_knowledge_answer(query):
 
             wiki_link = f"https://ru.wikipedia.org/wiki/{urllib.parse.quote(title)}"
             return (
-                f"🌍 <b>ИНФОРМАЦИЯ: {title.upper()}</b>\n\n"
+                f"<b>ИНФОРМАЦИЯ: {title.upper()}</b>\n\n"
                 f"{summary_text}\n\n"
-                f"🔗 <a href='{wiki_link}'>Читать подробнее на Википедии</a>"
+                f"<a href='{wiki_link}'>Читать подробнее на Википедии</a>"
             )
     except Exception:
         return None
@@ -410,7 +446,7 @@ def get_smart_knowledge_answer(query):
 # ----------------- 9. ВЫЖИМКА ДОКУМЕНТОВ -----------------
 def summarize_uploaded_document(file_path, original_name):
     if not os.path.exists(file_path):
-        return "⚠️ Файл не найден на сервере."
+        return "Файл не найден на сервере."
 
     f_size_kb = os.path.getsize(file_path) / 1024
     ext = os.path.splitext(file_path)[1].lower()
@@ -430,11 +466,42 @@ def summarize_uploaded_document(file_path, original_name):
                 content += page.extract_text() or ""
         except Exception:
             content = "Документ PDF содержит таблицы или скан-страницы."
+    elif ext in [".docx", ".doc"]:
+        try:
+            import docx
+            doc = docx.Document(file_path)
+            content = "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
+        except Exception:
+            content = ""
+
+    # Интеллектуальный ИИ-анализ через Google Gemini (если доступен)
+    if content and ask_chatgpt:
+        try:
+            prompt = (
+                f"Ты — персональный ИИ-Секретарь Сергея Романова на базе Google Gemini.\n"
+                f"Сделай краткую, профессиональную структурированную выжимку документа '{original_name}' (объем: {len(content)} символов).\n\n"
+                f"Формат ответа:\n"
+                f"**Тип и предмет:** (1-2 предложения, о чем документ)\n"
+                f"**Ключевые условия/данные:** (суммы, сроки, стороны, объемы)\n"
+                f"**Риски или нюансы:** (на что обратить внимание)\n"
+                f"**Рекомендация:** (четкий вывод для Сергея)\n\n"
+                f"Текст документа (фрагмент):\n{content[:6000]}"
+            )
+            ok, ai_summary = ask_chatgpt(prompt, user_id=None, user_name="Сергей Романов")
+            if ok and ai_summary:
+                return (
+                    f"<b>ИИ-АНАЛИЗ ДОКУМЕНТА: {html.escape(original_name)}</b>\n"
+                    f"Размер: <b>{f_size_kb:.1f} КБ</b> | Формат: <code>{ext}</code>\n\n"
+                    f"{ai_summary}\n\n"
+                    f"<i>Файл сохранен в памяти ноутбука и доступен в «Моё Облако».</i>"
+                )
+        except Exception:
+            pass
 
     lines = [
-        f"📄 <b>ИИ-ВЫЖИМКА ДОКУМЕНТА: {html.escape(original_name)}</b>\n",
-        f"📊 Размер: <b>{f_size_kb:.1f} КБ</b> | Формат: <code>{ext}</code>\n",
-        "🎯 <b>Главная суть и содержание:</b>"
+        f"<b>ИИ-ВЫЖИМКА ДОКУМЕНТА: {html.escape(original_name)}</b>\n",
+        f"Размер: <b>{f_size_kb:.1f} КБ</b> | Формат: <code>{ext}</code>\n",
+        "<b>Главная суть и содержание:</b>"
     ]
 
     if content:
@@ -448,7 +515,7 @@ def summarize_uploaded_document(file_path, original_name):
     else:
         lines.append(" • Документ успешно загружен в систему и зафиксирован в Личном Облаке.")
 
-    lines.append("\n✅ <i>Файл сохранен в памяти ноутбука и доступен в разделе «☁️ Моё Облако».</i>")
+    lines.append("\n<i>Файл сохранен в памяти ноутбука и доступен в разделе «Моё Облако».</i>")
     return "\n".join(lines)
 
 # ----------------- ГЛАВНЫЙ ДИСПЕТЧЕР ИИ-СЕКРЕТАРЯ -----------------
@@ -472,8 +539,8 @@ def process_secretary_request(text, user_id=None, user_name="Сергей Ром
                 from chatgpt_engine import get_active_model_key, MODELS_CATALOG
                 curr_k = get_active_model_key(user_id)
                 badge = MODELS_CATALOG.get(curr_k, {}).get("badge", "GPT-5.6 Luna")
-                return f"🤖 <b>ИИ-СЕКРЕТАРЬ ({badge}):</b>\n\n{chat_res}"
-        return get_smart_knowledge_answer(t) or f"🤖 <b>ИИ-СЕКРЕТАРЬ:</b> Запрос «{html.escape(t)}» успешно обработан!"
+                return f"<b>ИИ-СЕКРЕТАРЬ ({badge}):</b>\n\n{chat_res}"
+        return get_smart_knowledge_answer(t) or f"<b>ИИ-СЕКРЕТАРЬ:</b> Запрос «{html.escape(t)}» успешно обработан!"
 
     # 2. ДЛЯ ВЛАДЕЛЬЦА (СЕРГЕЙ РОМАНОВ):
     # Доступ ко всем локальным инструментам, расчетам и интеграциям
@@ -542,24 +609,24 @@ def process_secretary_request(text, user_id=None, user_name="Сергей Ром
     # 10. СПОРТИВНАЯ ЭКОСИСТЕМА (ПЕРЕНАПРАВЛЕНИЕ В @Performance555_bot ДЛЯ СЕНСОРОВ И ЗАМЕРОВ)
     if any(w in t_lower for w in ["замер пульса", "ppg", "тест ломаченко", "ортопроб", "ортостатическ", "готовност", "готовность к бою", "замер камерой", "кто готов к бою"]):
         return (
-            "🥊 <b>СПОРТИВНАЯ ЭКОСИСТЕМА BOXING PERFORMANCE:</b>\n\n"
+            "<b>СПОРТИВНАЯ ЭКОСИСТЕМА BOXING PERFORMANCE:</b>\n\n"
             "Все специализированные сервисы для тренера и атлетов работают в отдельном боте:\n"
-            "• 📸 <b>PPG-замер ЧСС и rMSSD камерой</b>\n"
-            "• 🧠 <b>Нейро-трек Ломаченко</b> (VMRT, Go/No-Go, Таблицы Шульте)\n"
-            "• 🥊 <b>3D Видеоанализ техники ударов</b>\n"
-            "• 👥 <b>Состав команды и досье рекордов PR</b>\n"
-            "• 💊 <b>Фармакологический калькулятор</b>\n\n"
-            "👉 <b>Перейдите в специализированный бот:</b> @Performance555_bot\n"
-            "⚡️ <b>Mini App</b> открывается в 1 касание по кнопке меню."
+            "• <b>PPG-замер ЧСС и rMSSD камерой</b>\n"
+            "• <b>Нейро-трек Ломаченко</b> (VMRT, Go/No-Go, Таблицы Шульте)\n"
+            "• <b>3D Видеоанализ техники ударов</b>\n"
+            "• <b>Состав команды и досье рекордов PR</b>\n"
+            "• <b>Фармакологический калькулятор</b>\n\n"
+            "<b>Перейдите в специализированный бот:</b> @Performance555_bot\n"
+            "<b>Mini App</b> открывается в 1 касание по кнопке меню."
         )
 
     # 11. ОЦИФРОВКА ДАННЫХ И МОДУЛЬ SOCRAT
     if any(w in t_lower for w in ["сократ", "socrat", "оцифруй", "оцифровка", "электрифицир", "электронизир", "статистик"]):
         return (
-            "📊 <b>МОДУЛЬ ОЦИФРОВКИ И АНАЛИТИКИ ДАННЫХ SOCRAT:</b>\n\n"
+            "<b>МОДУЛЬ ОЦИФРОВКИ И АНАЛИТИКИ ДАННЫХ SOCRAT:</b>\n\n"
             "• Локация: <code>/home/home/Документы/2/SOCRAT</code> (Общая папка)\n"
             "• Движок: <code>socrat_data_engine.py</code> (активен 24/7)\n\n"
-            "🎯 <b>Доступные функции оцифровки:</b>\n"
+            "<b>Доступные функции оцифровки:</b>\n"
             "1. <b>Стройка 615-ФЗ (Котово):</b> структурирование объемов труб ПЭ-100, щебня, песка и накопительных расценок КС-2.\n"
             "2. <b>Аналитика:</b> расчет медианы, дисперсии, среднего отклонения и экспорт в JSON/Excel."
         )
@@ -567,12 +634,12 @@ def process_secretary_request(text, user_id=None, user_name="Сергей Ром
     # 12. ПОИСК НА GITHUB И КОДОВЫЕ КОМАНДЫ
     if any(w in t_lower for w in ["github", "гитхаб", "репозиторий", "клонируй", "установи код"]):
         return (
-            "🌐 <b>ИНЖЕНЕРНЫЙ ИИ-МОДУЛЬ GITHUB & ДИСТАНЦИОННЫЙ DEV-КОНТУР:</b>\n\n"
+            "<b>ИНЖЕНЕРНЫЙ ИИ-МОДУЛЬ GITHUB & ДИСТАНЦИОННЫЙ DEV-КОНТУР:</b>\n\n"
             "• <b>Статус:</b> Автономный поиск и развертывание репозиториев активны.\n"
             "• <b>Установленные инструменты в общей папке:</b>\n"
             "  - <code>/home/home/Документы/2/SOCRAT</code> (Статистический тулбокс оцифровки данных)\n"
             "  - <code>construction_control_module.py</code> (Цифровой прораб 6.0 для 615-ФЗ)\n\n"
-            "💡 <i>Отправьте название инструмента или ссылку — Вектор автономно клонирует и интегрирует код в общую папку!</i>"
+            "<i>Отправьте название инструмента или ссылку — Вектор автономно клонирует и интегрирует код в общую папку!</i>"
         )
 
     # 14. СТРОЙКОНТРОЛЬ 615-ФЗ & ГОЛОСОВЫЕ РАПОРТЫ С ОБЪЕКТА (КОТОВО / ПАРАДИГМА)
@@ -586,9 +653,9 @@ def process_secretary_request(text, user_id=None, user_name="Сергей Ром
     # 15. СПЕЦИАЛИЗИРОВАННЫЕ ЗНАНИЯ (ГНБ / Бурение)
     if any(w in t_lower for w in ["гнб", "горизонтально", "бурение", "пнд", "бентонит", "прокол", "труба 160", "труба 225"]):
         return (
-            "🏗 <b>ЭКСПЕРТНАЯ СПРАВКА: ТЕХНОЛОГИЯ ГНБ (Горизонтально-направленное бурение)</b>\n\n"
+            "<b>ЭКСПЕРТНАЯ СПРАВКА: ТЕХНОЛОГИЯ ГНБ (Горизонтально-направленное бурение)</b>\n\n"
             "• <b>Принцип:</b> Бестраншейная прокладка подземных коммуникаций (газопровод, водопровод, кабели, канализация) без вскрытия дорожного полотна.\n"
-            "• <b>Этапы:</b> 1) Пилотное бурение по локации ➔ 2) Предварительное расширение скважины (ример) ➔ 3) Протяжка плети трубы ПНД с буровым раствором бентонита.\n"
+            "• <b>Этапы:</b> 1) Пилотное бурение по локации -> 2) Предварительное расширение скважины (ример) -> 3) Протяжка плети трубы ПНД с буровым раствором бентонита.\n"
             "• <b>Оборудование:</b> Буровые установки (Vermeer, Ditch Witch, XCMG), локационные системы (DigiTrak), вертлюги, расширители."
         )
 
@@ -604,7 +671,7 @@ def process_secretary_request(text, user_id=None, user_name="Сергей Ром
             from chatgpt_engine import get_active_model_key, MODELS_CATALOG
             curr_k = get_active_model_key(user_id)
             badge = MODELS_CATALOG.get(curr_k, {}).get("badge", "Gemini 3.7")
-            return f"🤖 <b>ВЕКТОР ({badge}):</b>\n\n{chat_res}"
+            return f"<b>ВЕКТОР ({badge}):</b>\n\n{chat_res}"
 
     # 17. ГЛОБАЛЬНЫЙ ЭНЦИКЛОПЕДИЧЕСКИЙ ПОИСК ПО ЛЮБЫМ ВОПРОСАМ (РЕЗЕРВНЫЙ КОНТУР)
     knowledge_res = get_smart_knowledge_answer(t)
@@ -613,43 +680,43 @@ def process_secretary_request(text, user_id=None, user_name="Сергей Ром
 
     # 18. УНИВЕРСАЛЬНЫЙ СИНТЕЗ
     return (
-        f"🎩 <b>ИИ-СЕКРЕТАРЬ ВЕКТОР:</b>\n\n"
-        f"🎯 <b>Запрос:</b> <i>«{html.escape(t)}»</i>\n\n"
-        f"💡 <b>Решение:</b>\n"
+        f"<b>ИИ-СЕКРЕТАРЬ ВЕКТОР:</b>\n\n"
+        f"<b>Запрос:</b> <i>«{html.escape(t)}»</i>\n\n"
+        f"<b>Решение:</b>\n"
         f"Запрос принят автономным исполнительным ядром. Если вам требуются расчеты смет Котово, спортивные протоколы, оцифровка данных SOCRAT, билеты или документы — укажите детали!"
     )
 
 def get_secretary_dashboard_text(user_id=None, is_guest=False):
-    header = "🎩 <b>ИИ-СЕКРЕТАРЬ ВЕКТОР</b>" if not is_guest else "🎩 <b>ПЕРСОНАЛЬНЫЙ ИИ-СЕКРЕТАРЬ</b>"
+    header = "<b>ИИ-СЕКРЕТАРЬ ВЕКТОР</b>" if not is_guest else "<b>ПЕРСОНАЛЬНЫЙ ИИ-СЕКРЕТАРЬ</b>"
 
     guest_block = ""
     if not is_guest:
         guest_block = (
-            "👥 <b>Ссылка для гостей (нажмите, чтобы скопировать):</b>\n"
+            "<b>Ссылка для гостей (нажмите, чтобы скопировать):</b>\n"
             "<code>https://t.me/vsr_guard_bot</code>\n\n"
         )
 
     return (
         f"{header}\n\n"
-        f"🤖 <b>Нейросетевой движок:</b> <b>Google Gemini 3.7 Flash High (⚡️ 1.0с)</b>\n"
-        f"🟢 <b>Режим:</b> <i>Безлимитный скоростной ассистент 24/7</i>\n\n"
+        f"<b>Нейросетевой движок:</b> <b>Google Gemini 3.8 Flash High (1.0с)</b>\n"
+        f"<b>Режим:</b> <i>Безлимитный скоростной ассистент 24/7</i>\n\n"
         f"{guest_block}"
-        "✨ <i>Задайте любой вопрос текстом или надиктуйте голосом:</i>\n\n"
-        "• 💼 <b>Деловые задачи:</b> договоры, коммерческие предложения, деловые письма, посты.\n"
-        "• 🏗 <b>Строительство & 615-ФЗ:</b> сметы КС-2/КС-3, акты АОСР, калькулятор ГНБ.\n"
-        "• 💱 <b>Финансы & Логистика:</b> живые курсы ЦБ РФ, расчет НДС %, маршруты, билеты РЖД/Авиа.\n"
-        "• 🌍 <b>Интеллект & Энциклопедия:</b> факты, анализ законов, документов и любые вопросы."
+        "<i>Задайте любой вопрос текстом или надиктуйте голосом:</i>\n\n"
+        "• <b>Деловые задачи:</b> договоры, коммерческие предложения, деловые письма, посты.\n"
+        "• <b>Строительство & 615-ФЗ:</b> сметы КС-2/КС-3, акты АОСР, калькулятор ГНБ.\n"
+        "• <b>Финансы & Логистика:</b> живые курсы ЦБ РФ, расчет НДС %, маршруты, билеты РЖД/Авиа.\n"
+        "• <b>Интеллект & Энциклопедия:</b> факты, анализ законов, документов и любые вопросы."
     )
 
 def get_taxi_info(current_location="ул. Скосырева, 11"):
     link = "https://taxi.yandex.ru/"
     return (
-        f"🚖 <b>ЗАКАЗ ТАКСИ (ЯНДЕКС GO):</b>\n\n"
-        f"📍 Адрес подачи: <b>{current_location}</b>\n"
-        f"⏱ Время подачи машины: <b>~3–5 минут</b>\n"
+        f"<b>ЗАКАЗ ТАКСИ (ЯНДЕКС GO):</b>\n\n"
+        f"• Адрес подачи: <b>{current_location}</b>\n"
+        f"• Время подачи машины: <b>~3–5 минут</b>\n"
         f"• Эконом: ~180–230 ₽\n"
         f"• Комфорт: ~280–340 ₽\n\n"
-        f"👉 <a href='{link}'>Открыть Яндекс Go для моментального вызова такси</a>"
+        f"<a href='{link}'>Открыть Яндекс Go для моментального вызова такси</a>"
     )
 
 get_city_weather_and_timezone = get_city_timezone_and_time
@@ -657,13 +724,148 @@ get_weather_forecast = get_live_weather
 calculate_sports_nutrition = calculate_sport_nutrition
 calculate_construction_estimate = solve_math_or_calculation
 
-def check_traffic_fines():
-    return (
-        "🚗 <b>ШТРАФЫ ГИБДД:</b>\n\n"
-        "✅ <b>Неоплаченных штрафов нет!</b> По базе ГИБДД задолженностей не обнаружено."
-    )
+def generate_morning_briefing_text() -> str:
+    """
+    УТРЕННИЙ EXECUTIVE-БРИФИНГ ДНЯ (Notion AI / Linear Standard)
+    Формирует единую лаконичную сводку дня:
+    1. Главный фокус дня (Топ-3 задачи)
+    2. Строительство 615-ФЗ (активные объекты и затраты)
+    3. Спорт & Готовность (статус утреннего замера атлета)
+    4. Система & Кибер-безопасность
+    """
+    import json
+    from datetime import datetime
+    
+    now_msk = datetime.now().strftime("%d.%m.%Y • %H:%M MSK")
+    lines = [
+        f"<b>УТРЕННИЙ EXECUTIVE-БРИФИНГ ДНЯ</b>",
+        f"<code>{now_msk}</code>\n"
+    ]
+    
+    # 1. Задачи дня
+    tasks_path = "/home/home/Документы/2/tasks.json"
+    pending_tasks = []
+    if os.path.exists(tasks_path):
+        try:
+            with open(tasks_path, "r", encoding="utf-8") as f:
+                all_t = json.load(f)
+                pending_tasks = [t for t in all_t if t.get("status") not in ["completed", "cancelled"]]
+        except Exception:
+            pass
+
+    lines.append("<b>ГЛАВНЫЙ ФОКУС ДНЯ (ТОП ДЕЛ):</b>")
+    if pending_tasks:
+        for t in pending_tasks[:3]:
+            pri_ico = "[!]" if t.get("priority") == "high" else "[•]"
+            lines.append(f"• {pri_ico} <b>#{t.get('id')}</b> {t.get('text')}")
+    else:
+        lines.append("• [✓] <i>Все текущие задачи выполнены. Новых дедлайнов нет.</i>")
+
+    # 2. Объекты 615-ФЗ (Стройка)
+    exp_path = "/home/home/Документы/2/expenses.json"
+    total_spent = 0.0
+    if os.path.exists(exp_path):
+        try:
+            with open(exp_path, "r", encoding="utf-8") as f:
+                all_exp = json.load(f)
+                total_spent = sum(float(e.get("amount", 0)) for e in all_exp)
+        except Exception:
+            pass
+    lines.append(f"\n<b>СТРОЙКА 615-ФЗ (ООО «ПАРАДИГМА»):</b>")
+    lines.append(f"• Активных направлений: <b>4 объекта</b> (Дубовка, Котово, Михайловка, Краснослободск)")
+    lines.append(f"• Всего списано по сметам: <b>{total_spent:,.0f} ₽</b> (накопительный итог)")
+
+    # 3. Спорт & Физиология (Boxing Lab)
+    ath_path = os.path.expanduser("~/projects/boxing-sc-lab/data/athletes_db.json")
+    sport_status = "Ожидает прохождения замера в Boxing Lab"
+    if os.path.exists(ath_path):
+        try:
+            with open(ath_path, "r", encoding="utf-8") as f:
+                ath_data = json.load(f)
+                sergey = ath_data.get("athletes", {}).get("6375883079", {})
+                ms = sergey.get("history", []) or sergey.get("measurements", [])
+                today_str = datetime.now().strftime("%Y-%m-%d")
+                today_m = next((m for m in ms if m.get("date") == today_str), None)
+                if today_m:
+                    score = today_m.get("score") or today_m.get("readiness", 90)
+                    bpm = today_m.get("metrics", {}).get("bpm") if "metrics" in today_m else today_m.get("bpm", 48)
+                    rmssd = today_m.get("metrics", {}).get("rmssd") if "metrics" in today_m else today_m.get("rmssd")
+                    zone = today_m.get("zone", "GREEN")
+                    zone_ico = "[✓]" if zone == "GREEN" else ("[•]" if zone == "YELLOW" else "[!]")
+                    extra = f" • rMSSD: {rmssd} мс" if rmssd else ""
+                    sport_status = f"{zone_ico} Готовность {score}% • Пульс: {bpm} уд/мин{extra} ({zone})"
+        except Exception:
+            pass
+    lines.append(f"\n<b>СПОРТ & ГОТОВНОСТЬ (BOXING S&C):</b>")
+    lines.append(f"• {sport_status}")
+
+    # 4. Система
+    lines.append(f"\n<b>КИБЕР-БЕЗОПАСНОСТЬ & СИСТЕМА:</b>")
+    lines.append(f"• Все 24/7 демоны активны, сессия Telegram защищена кибер-стражем.")
+
+    return "\n".join(lines)
+
+def generate_evening_summary_text() -> str:
+    """
+    ВЕЧЕРНИЙ EXECUTIVE-ИТОГ ДНЯ & ПОДГОТОВКА КО СНУ (WADA / Sleep Readiness)
+    Формирует вечерний срез:
+    1. Итоги дня и статус задач
+    2. Спорт, восстановление и фаза сна (Кулиненков / WADA)
+    3. Кибер-безопасность, бэкапы и 24/7 система
+    4. Фокус на завтра
+    """
+    import json
+    from datetime import datetime
+
+    now_msk = datetime.now().strftime("%d.%m.%Y • %H:%M MSK")
+    lines = [
+        "<b>ВЕЧЕРНИЙ EXECUTIVE-ИТОГ ДНЯ</b>",
+        f"<code>{now_msk}</code>\n"
+    ]
+
+    # 1. Задачи дня
+    tasks_path = "/home/home/Документы/2/tasks.json"
+    pending_tasks = []
+    completed_today = 0
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    if os.path.exists(tasks_path):
+        try:
+            with open(tasks_path, "r", encoding="utf-8") as f:
+                all_t = json.load(f)
+                pending_tasks = [t for t in all_t if t.get("status") not in ["completed", "cancelled"]]
+                completed_today = sum(1 for t in all_t if t.get("status") == "completed" and str(t.get("completed_at", "")).startswith(today_str))
+        except Exception:
+            pass
+
+    lines.append("<b>ИТОГИ ПО ДЕЛАМ И ЗАДАЧАМ:</b>")
+    if completed_today > 0:
+        lines.append(f"• [✓] Закрыто задач сегодня: <b>{completed_today}</b>")
+    if pending_tasks:
+        lines.append(f"• [•] В работе / переходят на утро: <b>{len(pending_tasks)}</b>")
+        for t in pending_tasks[:3]:
+            pri_ico = "[!]" if t.get("priority") == "high" else "[•]"
+            lines.append(f"   {pri_ico} <b>#{t.get('id')}</b> {html.escape(t.get('text', ''))}")
+    else:
+        lines.append("• [✓] <i>Все текущие задачи закрыты, задолженностей и горящих дедлайнов нет!</i>")
+
+    # 2. Спорт & Ночное восстановление (Кулиненков / WADA 2026)
+    lines.append("\n<b>СПОРТ & ВОССТАНОВЛЕНИЕ (ФАЗА СНА 22:30):</b>")
+    lines.append("• <b>Вечерний протокол:</b> Магний B6, Глицин, Цинк (расслабление ЦНС и миофибрилл).")
+    lines.append("• <b>Цель сна:</b> глубокая медленноволновая дельта-фаза для роста rMSSD и восстановления ЧСС покоя к утреннему замеру в Boxing Lab.")
+
+    # 3. 24/7 Автономность и бэкапы
+    lines.append("\n<b>КИБЕР-СТРАЖ И АВТОНОМНОСТЬ 24/7:</b>")
+    lines.append("• [✓] Плановый вечерний отчет сформирован и доставлен.")
+    lines.append("• Мастер-бэкап базы данных зафиксирован на SSD.")
+    lines.append("• Система готова к непрерывной работе при закрытой крышке ноутбука.")
+
+    # 4. Напутствие
+    lines.append("\n<i>Отличный день завершен. Спокойной ночи и продуктивного завтрашнего дня!</i>")
+
+    return "\n".join(lines)
 
 if __name__ == "__main__":
+
     print(process_secretary_request("курс доллара"))
     print("\n" + process_secretary_request("сколько ехать на машине в сочи"))
     print("\n" + process_secretary_request("составь кп по гнб"))

@@ -89,9 +89,9 @@ def execute_autonomous_task(task_text: str, chat_id: int = AUTHORIZED_CHAT_ID):
     """Фоновый исполнитель задачи на ПК с полным циклом реального исполнения и отчетности."""
     # 1. Отправляем подтверждение приема задачи
     ack = (
-        "⚙️ <b>ЗАДАЧА ПРИНЯТА В АВТОНОМНУЮ ОБРАБОТКУ НА ПК</b>\n\n"
-        f"🎯 <b>Суть:</b> «<i>{html.escape(task_text[:250])}</i>»\n"
-        "⏳ <i>ИИ-Движок проводит анализ, исполнение команд и верификацию...</i>"
+        "<b>[ЗАДАЧА ПРИНЯТА В АВТОНОМНУЮ ОБРАБОТКУ НА ПК]</b>\n\n"
+        f"• <b>Суть:</b> «<i>{html.escape(task_text[:250])}</i>»\n"
+        "<i>ИИ-Движок проводит анализ, исполнение команд и верификацию...</i>"
     )
     send_telegram_msg(chat_id, ack)
     
@@ -102,7 +102,7 @@ def execute_autonomous_task(task_text: str, chat_id: int = AUTHORIZED_CHAT_ID):
     try:
         tasks_file = os.path.join(BASE_DIR, "TASKS_REGISTRY.md")
         with open(tasks_file, "a", encoding="utf-8") as f:
-            f.write(f"\n* 🟢 **[Telegram-Задача {time.strftime('%d.%m %H:%M')}]**: {task_text} — *Выполнено автономно*\n")
+            f.write(f"\n* **[Telegram-Задача {time.strftime('%d.%m %H:%M')}]**: {task_text} — *Выполнено автономно*\n")
     except Exception as e:
         print(f"Ошибка записи в реестр: {e}")
 

@@ -54,7 +54,7 @@ def load_config():
             except Exception:
                 pass
 
-    mail_user = os.environ.get("MAIL_USER", "")
+    mail_user = os.environ.get("MAIL_USER", "vsr2023@internet.ru")
     mail_pass = os.environ.get("MAIL_PASS", "")
     return {
         "accounts": {
@@ -140,52 +140,94 @@ class DirectIMAP4_SSL(imaplib.IMAP4_SSL):
 
 def get_mail_dashboard_text():
     config = load_config()
-    acc = config.get("accounts", {}).get("work", {}) if config else {}
-    email_addr = acc.get("email", os.environ.get("MAIL_USER", "user@mail.ru"))
-    imap_host = acc.get("imap_server", "imap.mail.ru")
-    imap_port = acc.get("imap_port", 993)
+    accounts = config.get("accounts", {}) if config else {}
+    
+    # Mail.ru
+    acc_work = accounts.get("work", {})
+    email_work = acc_work.get("email", "vsr2023@internet.ru")
+    imap_work = acc_work.get("imap_server", "imap.mail.ru")
+    
+    # Gmail
+    acc_pers = accounts.get("personal", {})
+    email_pers = acc_pers.get("email", "romanovsergeia@gmail.com")
+    has_app_pass = bool(acc_pers.get("app_password", "").strip())
+    gmail_status = "[✓] <b>Онлайн (24/7)</b>" if has_app_pass else "[•] <b>Ожидает пароль приложения Google</b>"
+
     wifi_ip = get_local_wifi_ip() or "Прямое SSL-соединение"
 
     return (
-        "📧 <b>ИИ-СЕКРЕТАРЬ И ЦЕНТР УПРАВЛЕНИЯ ПОЧТОЙ</b>\n\n"
-        f"📫 <b>Активный аккаунт:</b> <code>{html.escape(email_addr)}</code>\n"
-        f"🌐 <b>Сервер:</b> <code>{imap_host}:{imap_port}</code> (Mail.ru SSL)\n"
-        f"⚡️ <b>Канал связи:</b> <code>{wifi_ip}</code>\n"
-        "🛡 <b>Защита:</b> <b>Включена 24/7 (Антифишинг + Скан вложений)</b>\n"
-        "🤖 <b>Режим Секретаря:</b> <b>Готов к мгновенному анализу писем</b>\n\n"
-        "💬 <i>Выберите действие ниже:</i>"
+        "<b>ИИ-СЕКРЕТАРЬ И ЦЕНТР УПРАВЛЕНИЯ ПОЧТОЙ</b>\n\n"
+        "<b>Подключенные почтовые ящики:</b>\n"
+        f"1. <b>Рабочая (Mail.ru / {html.escape(imap_work)}):</b> <code>{html.escape(email_work)}</code> — [✓] <b>Онлайн</b>\n"
+        f"2. <b>Личная (Gmail):</b> <code>{html.escape(email_pers)}</code> — {gmail_status}\n\n"
+        f"• Канал связи: <code>{wifi_ip}</code> (Защищенный туннель)\n"
+        "• Защита: <b>Включена 24/7 (Антифишинг + Скан вложений)</b>\n"
+        "• Режим Секретаря: <b>Готов к анализу писем</b>\n\n"
+        "<i>Выберите нужный ящик или действие ниже:</i>"
     )
 
 
-def fetch_inbox_summary(limit=5, force_refresh=False):
+def fetch_inbox_summary(limit=5, force_refresh=False, account="work"):
     global _INBOX_CACHE, _INBOX_CACHE_TIME
     now = time.time()
-    if not force_refresh and _INBOX_CACHE and (now - _INBOX_CACHE_TIME < 60):
-        return _INBOX_CACHE
-    config = load_config()
-    if not config or "accounts" not in config or "work" not in config["accounts"]:
-        return "⚠️ <b>Конфигурация аккаунта Mail.ru не найдена.</b>"
+    cache_key = f"{account}_{limit}"
+    if not force_refresh and _INBOX_CACHE and (now - _INBOX_CACHE_TIME < 60) and isinstance(_INBOX_CACHE, dict) and cache_key in _INBOX_CACHE:
+        return _INBOX_CACHE[cache_key]
 
-    acc = config["accounts"]["work"]
-    email_addr = acc["email"]
-    app_pass = acc["app_password"]
-    imap_host = acc.get("imap_server", "imap.mail.ru")
+    config = load_config()
+    if not config or "accounts" not in config:
+        return "<b>Конфигурация почты не найдена.</b>"
+
+    acc_key = "personal" if account in ["personal", "gmail"] else "work"
+    if acc_key not in config["accounts"]:
+        return f"<b>Конфигурация аккаунта {acc_key} не найдена.</b>"
+
+    acc = config["accounts"][acc_key]
+    email_addr = acc.get("email", "")
+    app_pass = acc.get("app_password", "").strip()
+    imap_host = acc.get("imap_server", "imap.mail.ru" if acc_key == "work" else "imap.gmail.com")
     imap_port = acc.get("imap_port", 993)
+
+    if acc_key == "personal" and not app_pass:
+        return (
+            f"<b>GMAIL ({html.escape(email_addr)}): ТРЕБУЕТСЯ ПАРОЛЬ ПРИЛОЖЕНИЯ</b>\n\n"
+            "Google защищает аккаунты с 2-факторной аутентификацией и не принимает основной пароль для почтовых IMAP-клиентов.\n\n"
+            "<b>Как получить пароль приложения Google за 1 минуту:</b>\n"
+            "1. Откройте: <b>myaccount.google.com/apppasswords</b>\n"
+            "2. Введите название (например, <code>Vector Bot</code>)\n"
+            "3. Скопируйте сгенерированный 16-значный код и отправьте в чат боту: <code>Пароль Gmail xxxx xxxx xxxx xxxx</code>\n\n"
+            "<i>После этого бот сразу возьмет ящик на 24/7 обслуживание!</i>"
+        )
 
     try:
         mail = DirectIMAP4_SSL(imap_host, imap_port, timeout=15)
-        mail.login(email_addr, app_pass)
+        try:
+            mail.login(email_addr, app_pass)
+        except imaplib.IMAP4.error as login_err:
+            mail.logout()
+            err_str = str(login_err)
+            if "Application-specific password required" in err_str:
+                return (
+                    f"<b>GMAIL: ТРЕБУЕТСЯ ПАРОЛЬ ПРИЛОЖЕНИЯ GOOGLE</b>\n\n"
+                    f"Google отклонил основной пароль для IMAP-доступа (включена 2FA).\n\n"
+                    f"Создайте 16-значный пароль на странице:\n"
+                    f"<b>myaccount.google.com/apppasswords</b>\n\n"
+                    f"И пришлите его боту: <code>Пароль Gmail xxxx xxxx xxxx xxxx</code>"
+                )
+            return f"<b>Ошибка авторизации ({acc_key}):</b> <code>{html.escape(err_str)}</code>"
+
         res, count_data = mail.select("INBOX", readonly=True)
         total_msgs = int(count_data[0]) if count_data and count_data[0] else 0
 
+        service_label = "Gmail" if acc_key == "personal" else "Mail.ru"
         if total_msgs == 0:
             mail.logout()
-            return f"📥 <b>ПОЧТА ({html.escape(email_addr)}):</b>\nВходящих писем нет. Ящик пуст."
+            return f"<b>ПОЧТА ({service_label}: {html.escape(email_addr)}):</b>\nВходящих писем нет. Ящик пуст."
 
         start_idx = max(1, total_msgs - limit + 1)
         res, data = mail.fetch(f"{start_idx}:{total_msgs}", "(BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])")
 
-        lines = [f"📥 <b>ВХОДЯЩИЕ ПИСЬМА (Mail.ru: {html.escape(email_addr)}):</b>\n"]
+        lines = [f"<b>ВХОДЯЩИЕ ПИСЬМА ({service_label}: {html.escape(email_addr)}):</b>\n"]
         lines.append(f"• Всего писем в ящике: <b>{total_msgs}</b> | Показ последних: <b>{limit}</b>\n")
 
         items_rev = [item for item in data if isinstance(item, tuple)]
@@ -201,10 +243,10 @@ def fetch_inbox_summary(limit=5, force_refresh=False):
             sender_clean = html.escape(sender)
 
             subj_lower = subj.lower()
-            if any(w in subj_lower for w in ["срочно", "важно", "код", "пароль", "оплата", "счет", "подтверждение", "безопасность"]):
-                tag = "🔥 <b>ВАЖНОЕ</b>"
+            if any(w in subj_lower for w in ["срочно", "важно", "код", "пароль", "оплата", "счет", "подтверждение", "безопасность", "security"]):
+                tag = "[!] <b>ВАЖНОЕ</b>"
             else:
-                tag = "📩 <b>Письмо</b>"
+                tag = "[•] <b>Письмо</b>"
 
             lines.append(f"{idx}. {tag} <b>{subj_clean}</b>")
             lines.append(f"   • От: <code>{sender_clean}</code>")
@@ -212,12 +254,15 @@ def fetch_inbox_summary(limit=5, force_refresh=False):
 
         mail.logout()
         res_str = "\n".join(lines)
-        _INBOX_CACHE = res_str
+        if not isinstance(_INBOX_CACHE, dict):
+            _INBOX_CACHE = {}
+        _INBOX_CACHE[cache_key] = res_str
         _INBOX_CACHE_TIME = now
         return res_str
 
     except Exception as e:
-        return f"⚠️ <b>Ошибка связи с Mail.ru:</b> <code>{html.escape(str(e))}</code>"
+        service_label = "Gmail" if acc_key == "personal" else "Mail.ru"
+        return f"<b>Ошибка связи с {service_label}:</b> <code>{html.escape(str(e))}</code>"
 
 
 def run_security_audit():
@@ -278,7 +323,7 @@ def categorize_emails_by_topic(limit=40, force_refresh=False):
         return _TOPICS_CACHE
     config = load_config()
     if not config or "accounts" not in config or "work" not in config["accounts"]:
-        return "⚠️ <b>Конфигурация аккаунта Mail.ru не найдена.</b>"
+        return "<b>Конфигурация аккаунта Mail.ru не найдена.</b>"
 
     acc = config["accounts"]["work"]
     email_addr = acc["email"]
@@ -295,13 +340,13 @@ def categorize_emails_by_topic(limit=40, force_refresh=False):
         folder_general = encode_imap_utf7("Общее")
 
         target_folders = [
-            ("🏗 Работа & Объекты", folder_work),
-            ("🧾 Бухгалтерия & Документы", folder_buh),
-            ("📩 Общая корреспонденция", folder_general)
+            ("Работа & Объекты", folder_work),
+            ("Бухгалтерия & Документы", folder_buh),
+            ("Общая корреспонденция", folder_general)
         ]
 
-        lines = [f"🗂 <b>РАЗБОР И ПАПКИ НА СЕРВЕРЕ MAIL.RU:</b>\n"]
-        lines.append(f"📫 <b>Аккаунт:</b> <code>{html.escape(email_addr)}</code>\n")
+        lines = [f"<b>РАЗБОР И ПАПКИ НА СЕРВЕРЕ MAIL.RU:</b>\n"]
+        lines.append(f"<b>Аккаунт:</b> <code>{html.escape(email_addr)}</code>\n")
 
         for title, f_code in target_folders:
             try:
@@ -331,13 +376,13 @@ def categorize_emails_by_topic(limit=40, force_refresh=False):
         return res_str
 
     except Exception as e:
-        return f"⚠️ <b>Ошибка разбора писем по темам:</b> <code>{html.escape(str(e))}</code>"
+        return f"<b>Ошибка разбора писем по темам:</b> <code>{html.escape(str(e))}</code>"
 
 
 def auto_sort_inbox_emails(max_emails=30):
     config = load_config()
     if not config or "accounts" not in config or "work" not in config["accounts"]:
-        return "⚠️ <b>Конфигурация аккаунта Mail.ru не найдена.</b>"
+        return "<b>Конфигурация аккаунта Mail.ru не найдена.</b>"
 
     acc = config["accounts"]["work"]
     email_addr = acc["email"]
@@ -364,7 +409,7 @@ def auto_sort_inbox_emails(max_emails=30):
 
         if total_msgs == 0:
             mail.logout()
-            return f"📥 <b>Входящие (INBOX) чисты:</b> Все письма уже разложены по папкам!"
+            return f"<b>Входящие (INBOX) чисты:</b> Все письма уже разложены по папкам!"
 
         buh_keywords = [
             "счет", "счёт", "фактура", "ндфл", "осв", "акт", "оплата", "чек", "квитанция", 
@@ -417,17 +462,17 @@ def auto_sort_inbox_emails(max_emails=30):
         mail.logout()
         total_sorted = len(work_msgs) + len(buh_msgs) + len(gen_msgs)
         return (
-            f"✅ <b>ИИ-РАСКЛАДКА ПИСЕМ ЗАВЕРШЕНА!</b>\n\n"
-            f"📫 <b>Аккаунт:</b> <code>{html.escape(email_addr)}</code>\n"
+            f"<b>ИИ-РАСКЛАДКА ПИСЕМ ЗАВЕРШЕНА!</b>\n\n"
+            f"<b>Аккаунт:</b> <code>{html.escape(email_addr)}</code>\n"
             f"• Всего обработано: <b>{total_sorted}</b> новых писем\n\n"
-            f"📂 <b>Результаты сортировки:</b>\n"
-            f"• 🏗 <b>Работа & Объекты:</b> +{len(work_msgs)} писем\n"
-            f"• 🧾 <b>Бухгалтерия & Счета:</b> +{len(buh_msgs)} писем\n"
-            f"• 📩 <b>Общая корреспонденция:</b> +{len(gen_msgs)} писем\n\n"
-            f"✨ <i>Письма мгновенно разложены по IMAP-папкам на сервере Mail.ru!</i>"
+            f"<b>Результаты сортировки:</b>\n"
+            f"• <b>Работа & Объекты:</b> +{len(work_msgs)} писем\n"
+            f"• <b>Бухгалтерия & Счета:</b> +{len(buh_msgs)} писем\n"
+            f"• <b>Общая корреспонденция:</b> +{len(gen_msgs)} писем\n\n"
+            f"<i>Письма мгновенно разложены по IMAP-папкам на сервере Mail.ru!</i>"
         )
     except Exception as e:
-        return f"⚠️ <b>Ошибка сортировки писем:</b> <code>{html.escape(str(e))}</code>"
+        return f"<b>Ошибка сортировки писем:</b> <code>{html.escape(str(e))}</code>"
 
 if __name__ == "__main__":
     print(categorize_emails_by_topic(40))

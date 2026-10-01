@@ -20,6 +20,13 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 TASKS_JSON_PATH = os.path.join(PROJECT_ROOT, "tasks.json")
 EXPENSES_JSON_PATH = os.path.join(PROJECT_ROOT, "expenses.json")
 NOTES_JSON_PATH = os.path.join(PROJECT_ROOT, "notes.json")
+REMINDERS_JSON_PATH = os.path.join(PROJECT_ROOT, "reminders.json")
+
+# Совместимость с тестовыми наборами и внешними скриптами
+TASKS_PATH = TASKS_JSON_PATH
+EXPENSES_PATH = EXPENSES_JSON_PATH
+NOTES_PATH = NOTES_JSON_PATH
+REMINDERS_PATH = REMINDERS_JSON_PATH
 NOTES_DIR = os.path.join(PROJECT_ROOT, "База_Заметок")
 CONSTRUCTION_DIR = os.path.join(PROJECT_ROOT, "Работа", "615")
 
@@ -97,22 +104,22 @@ def get_tasks_hud_text(filter_mode="all", page=1, page_size=6):
     tasks = load_tasks()
     if filter_mode == "work":
         filtered = [t for t in tasks if "работ" in str(t.get("category", "")).lower() or "615" in str(t.get("category", "")).lower()]
-        title_tag = "💼 РАБОТА"
+        title_tag = "РАБОТА"
     elif filter_mode == "sport":
         filtered = [t for t in tasks if "спорт" in str(t.get("category", "")).lower()]
-        title_tag = "🥊 СПОРТ & КЭМП"
+        title_tag = "СПОРТ & КЭМП"
     elif filter_mode == "urgent":
         filtered = [t for t in tasks if t.get("priority") == "high" and t.get("status") == "pending"]
-        title_tag = "🔥 СРОЧНЫЕ ЗАДАЧИ"
+        title_tag = "СРОЧНЫЕ ЗАДАЧИ"
     elif filter_mode == "pending":
         filtered = [t for t in tasks if t.get("status") == "pending"]
-        title_tag = "⏳ В РАБОТЕ"
+        title_tag = "В РАБОТЕ"
     elif filter_mode == "done":
         filtered = [t for t in tasks if t.get("status") == "done"]
-        title_tag = "✅ ВЫПОЛНЕННЫЕ"
+        title_tag = "ВЫПОЛНЕННЫЕ"
     else:
         filtered = tasks
-        title_tag = "📋 ВСЕ ЗАДАЧИ"
+        title_tag = "ВСЕ ЗАДАЧИ"
 
     total_tasks = len(filtered)
     total_pages = max(1, (total_tasks + page_size - 1) // page_size)
@@ -128,22 +135,22 @@ def get_tasks_hud_text(filter_mode="all", page=1, page_size=6):
     bar = "█" * (progress_pct // 10) + "░" * (10 - progress_pct // 10)
 
     lines = [
-        f"📋 <b>ИНТЕРАКТИВНЫЙ ТРЕКЕР ЗАДАЧ // {title_tag}</b>",
-        f"📊 <b>Общий прогресс:</b> <code>[{bar}] {progress_pct}%</code> ({total_done}/{total_all})",
+        f"<b>ИНТЕРАКТИВНЫЙ ТРЕКЕР ЗАДАЧ // {title_tag}</b>",
+        f"<b>Общий прогресс:</b> <code>[{bar}] {progress_pct}%</code> ({total_done}/{total_all})",
         ""
     ]
 
     if not page_tasks:
         lines.append("<i>В этой категории пока нет задач.</i>")
     else:
-        lines.append("<i>💡 Нажимайте на кнопки внизу для переключения статуса в 1 клик:</i>")
+        lines.append("<i>Нажимайте на кнопки внизу для переключения статуса в 1 клик:</i>")
         lines.append("")
         for t in page_tasks:
             t_id = t.get("id")
             is_done = t.get("status") in ["done", "completed"]
             is_high = t.get("priority") == "high"
             
-            icon = "✅" if is_done else ("🔥" if is_high else "⏳")
+            icon = "[✓]" if is_done else ("[!] " if is_high else "[•]")
             strike_s = "<s>" if is_done else ""
             strike_e = "</s>" if is_done else ""
             cat_badge = f"[{t.get('category', 'Общее')}]"
@@ -180,37 +187,37 @@ def get_tasks_hud_markup(filter_mode="all", page=1, page_size=6):
         is_done = t.get("status") in ["done", "completed"]
         is_high = t.get("priority") == "high"
         
-        btn_icon = "🟢" if is_done else ("🔥" if is_high else "⬜️")
+        btn_icon = "[✓]" if is_done else ("[!] " if is_high else "[ ]")
         short_txt = t.get("text", "")
         if len(short_txt) > 26:
             short_txt = short_txt[:24] + "..."
         btn_title = f"{btn_icon} #{t_id} {short_txt}"
         row = [{"text": btn_title, "callback_data": f"task_toggle_{t_id}_{filter_mode}_{curr_page}"}]
         if is_done:
-            row.append({"text": "🗑", "callback_data": f"task_del_{t_id}_{filter_mode}_{curr_page}"})
+            row.append({"text": "Удалить", "callback_data": f"task_del_{t_id}_{filter_mode}_{curr_page}"})
         rows.append(row)
 
     if total_pages > 1:
         p_row = []
         if curr_page > 1:
-            p_row.append({"text": "◀️ Назад", "callback_data": f"task_page_{filter_mode}_{curr_page - 1}"})
-        p_row.append({"text": f"📄 Лист {curr_page}/{total_pages}", "callback_data": "noop"})
+            p_row.append({"text": "« Назад", "callback_data": f"task_page_{filter_mode}_{curr_page - 1}"})
+        p_row.append({"text": f"Лист {curr_page}/{total_pages}", "callback_data": "noop"})
         if curr_page < total_pages:
-            p_row.append({"text": "Вперед ▶️", "callback_data": f"task_page_{filter_mode}_{curr_page + 1}"})
+            p_row.append({"text": "Вперед »", "callback_data": f"task_page_{filter_mode}_{curr_page + 1}"})
         rows.append(p_row)
 
     rows.append([
-        {"text": "📋 Все" if filter_mode != "all" else "• Все •", "callback_data": "task_filter_all"},
-        {"text": "💼 Работа" if filter_mode != "work" else "• Работа •", "callback_data": "task_filter_work"},
-        {"text": "🥊 Спорт" if filter_mode != "sport" else "• Спорт •", "callback_data": "task_filter_sport"},
-        {"text": "🔥 Срочные" if filter_mode != "urgent" else "• Срочные •", "callback_data": "task_filter_urgent"}
+        {"text": "Все" if filter_mode != "all" else "• Все •", "callback_data": "task_filter_all"},
+        {"text": "Работа" if filter_mode != "work" else "• Работа •", "callback_data": "task_filter_work"},
+        {"text": "Спорт" if filter_mode != "sport" else "• Спорт •", "callback_data": "task_filter_sport"},
+        {"text": "Срочные" if filter_mode != "urgent" else "• Срочные •", "callback_data": "task_filter_urgent"}
     ])
 
     rows.append([
-        {"text": "➕ Добавить задачу", "callback_data": "task_add_prompt"},
-        {"text": "🧹 Очистить сделанные", "callback_data": "task_clear_done"}
+        {"text": "Добавить задачу", "callback_data": "task_add_prompt"},
+        {"text": "Очистить сделанные", "callback_data": "task_clear_done"}
     ])
-    rows.append([{"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}])
+    rows.append([{"text": "« В Главное Меню", "callback_data": "nav_main"}])
 
     return {"inline_keyboard": rows}
 
@@ -285,48 +292,48 @@ def parse_executive_voice_summary(raw_text):
     }
 
 def format_executive_summary_card(parsed):
-    obj_str = f" • 🏛 Объект: <b>{parsed['object']}</b>" if parsed.get('object') else ""
-    cat_str = f"📁 Категория: <b>{parsed['category']}</b>{obj_str}"
+    obj_str = f" • Объект: <b>{parsed['object']}</b>" if parsed.get('object') else ""
+    cat_str = f"Категория: <b>{parsed['category']}</b>{obj_str}"
     
     lines = [
-        "🎙 <b>ГОЛОСОВОЙ ИИ-СЕКРЕТАРЬ (ВЫЖИМКА РАСПОРЯЖЕНИЯ)</b>",
+        "<b>ГОЛОСОВОЙ ИИ-СЕКРЕТАРЬ (ВЫЖИМКА РАСПОРЯЖЕНИЯ)</b>",
         cat_str,
         "────────────────────────────────────────",
-        f"📌 <b>СУТЬ:</b> {html.escape(parsed['summary'])}",
+        f"<b>СУТЬ:</b> {html.escape(parsed['summary'])}",
         ""
     ]
 
     if parsed.get('tasks'):
-        lines.append("✅ <b>ВЫДЕЛЕННЫЕ ЗАДАЧИ:</b>")
+        lines.append("<b>ВЫДЕЛЕННЫЕ ЗАДАЧИ:</b>")
         for idx, t in enumerate(parsed['tasks'], 1):
-            fire = "🔥 [СРОЧНО]" if t['priority'] == "high" else "⏳ [В ГРАФИКЕ]"
+            fire = "[СРОЧНО]" if t['priority'] == "high" else "[В ГРАФИКЕ]"
             lines.append(f" • {fire} {html.escape(t['text'])}")
         lines.append("")
 
     if parsed.get('amounts'):
         sum_str = ", ".join([f"<b>{a} ₽</b>" for a in parsed['amounts']])
-        lines.append(f"💰 <b>ФИНАНСЫ / СУММЫ:</b> {sum_str}")
+        lines.append(f"<b>ФИНАНСЫ / СУММЫ:</b> {sum_str}")
         lines.append("")
 
-    lines.append(f"📝 <b>Исходный текст:</b>")
+    lines.append(f"<b>Исходный текст:</b>")
     lines.append(f"<code>{html.escape(parsed['raw_text'])}</code>")
 
     keyboard = [
         [
-            {"text": "➕ В Задачи", "callback_data": "exec_save_tasks"},
-            {"text": f"📝 В Заметки #{parsed['category']}", "callback_data": "exec_save_note"}
+            {"text": "В Задачи", "callback_data": "exec_save_tasks"},
+            {"text": f"В Заметки #{parsed['category']}", "callback_data": "exec_save_note"}
         ],
         [
-            {"text": "⏰ Напоминание", "callback_data": "exec_save_remind"},
-            {"text": "📢 В Cloud storage", "callback_data": "exec_save_channel"}
+            {"text": "Напоминание", "callback_data": "exec_save_remind"},
+            {"text": "В Cloud storage", "callback_data": "exec_save_channel"}
         ]
     ]
     if parsed.get('amounts'):
         obj_target = parsed.get('object')
-        exp_btn_txt = f"💰 В Расходы {obj_target} (КС-2)" if obj_target else "💰 В Расходы (КС-2)"
+        exp_btn_txt = f"В Расходы {obj_target} (КС-2)" if obj_target else "В Расходы (КС-2)"
         keyboard.insert(1, [{"text": exp_btn_txt, "callback_data": "exec_save_expense"}])
     
-    keyboard.append([{"text": "📋 Скопировать текст", "callback_data": "exec_copy_raw"}, {"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}])
+    keyboard.append([{"text": "Скопировать текст", "callback_data": "exec_copy_raw"}, {"text": "« В Главное Меню", "callback_data": "nav_main"}])
 
     return "\n".join(lines), {"inline_keyboard": keyboard}
 
@@ -381,7 +388,7 @@ def generate_notes_txt_export():
         n_cat = n.get("category_name", n.get("category", "Общее"))
         n_txt = n.get("text", "").strip()
         lines.append(f"───────────────────────────────────────────────────────────────")
-        lines.append(f"📌 ЗАМЕТКА #{n_id} [{n_cat.upper()}] • {n_time}")
+        lines.append(f"ЗАМЕТКА #{n_id} [{n_cat.upper()}] • {n_time}")
         lines.append(f"───────────────────────────────────────────────────────────────")
         lines.append(n_txt)
         lines.append("\n")
@@ -477,7 +484,7 @@ def format_search_results_card(results):
     total_hits = len(notes) + len(tasks) + len(exp)
 
     lines = [
-        f"🔎 <b>ГЛОБАЛЬНЫЙ ПОИСК ПО БАЗЕ: «{html.escape(q)}»</b>",
+        f"<b>ГЛОБАЛЬНЫЙ ПОИСК ПО БАЗЕ: «{html.escape(q)}»</b>",
         f"Найдено совпадений: <b>{total_hits}</b>",
         "────────────────────────────────────────"
     ]
@@ -488,28 +495,28 @@ def format_search_results_card(results):
         lines.append("<i>Ничего не найдено. Попробуйте изменить ключевое слово или проверить опечатки.</i>")
     else:
         if tasks:
-            lines.append("📋 <b>ЗАДАЧИ:</b>")
+            lines.append("<b>ЗАДАЧИ:</b>")
             for t in tasks[:4]:
-                st = "✅" if t.get("status") == "done" else "⏳"
+                st = "[✓]" if t.get("status") == "done" else "[ ]"
                 lines.append(f" • {st} <b>#{t.get('id')}</b> {html.escape(t.get('text', ''))[:55]}")
             lines.append("")
-            action_buttons.append({"text": "📋 К Задачам", "callback_data": "nav_tasks"})
+            action_buttons.append({"text": "К Задачам", "callback_data": "nav_tasks"})
 
         if notes:
-            lines.append("📌 <b>ЗАМЕТКИ:</b>")
+            lines.append("<b>ЗАМЕТКИ:</b>")
             for n in notes[:4]:
                 cat_badge = f"[{n.get('category', 'Общее')}]"
-                lines.append(f" • 📝 <b>#{n.get('id')}</b> <i>{cat_badge}</i>: {html.escape(n.get('text', ''))[:55]}...")
+                lines.append(f" • <b>#{n.get('id')}</b> <i>{cat_badge}</i>: {html.escape(n.get('text', ''))[:55]}...")
             lines.append("")
             for n in notes[:2]:
-                action_buttons.append({"text": f"📝 Заметка #{n.get('id')}", "callback_data": f"note_view_{n.get('id')}"})
+                action_buttons.append({"text": f"Заметка #{n.get('id')}", "callback_data": f"note_view_{n.get('id')}"})
 
         if exp:
-            lines.append("💰 <b>РАСХОДЫ & КС-2:</b>")
+            lines.append("<b>РАСХОДЫ & КС-2:</b>")
             for e in exp[:4]:
-                lines.append(f" • 💳 <b>{e.get('amount', 0):,.0f} ₽</b> [{e.get('object', '615')}] — {html.escape(e.get('description', ''))[:45]}")
+                lines.append(f" • <b>{e.get('amount', 0):,.0f} ₽</b> [{e.get('object', '615')}] — {html.escape(e.get('description', ''))[:45]}")
             lines.append("")
-            action_buttons.append({"text": "🏗 К Расходам 615-ФЗ", "callback_data": "nav_work"})
+            action_buttons.append({"text": "К Расходам 615-ФЗ", "callback_data": "nav_work"})
 
     keyboard = []
     if action_buttons:
@@ -517,7 +524,7 @@ def format_search_results_card(results):
         for i in range(0, len(action_buttons), 2):
             keyboard.append(action_buttons[i:i+2])
 
-    keyboard.append([{"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}])
+    keyboard.append([{"text": "« В Главное Меню", "callback_data": "nav_main"}])
     return "\n".join(lines), {"inline_keyboard": keyboard}
 
 def get_object_budget_hud(obj_name: str):
@@ -547,11 +554,11 @@ def get_object_budget_hud(obj_name: str):
     bar = "█" * (pct // 10) + "░" * (10 - pct // 10)
     
     lines = [
-        f"🏗 <b>ОБЪЕКТ 615-ФЗ // {obj_clean}</b>",
+        f"<b>ОБЪЕКТ 615-ФЗ // {obj_clean}</b>",
         "────────────────────────────────────────",
-        f"💰 <b>Израсходовано:</b> <b>{total_spent:,.0f} ₽</b> из {budget_limit:,.0f} ₽",
-        f"📊 <b>Освоение сметы:</b> <code>[{bar}] {pct}%</code> (Остаток: <b>{rem:,.0f} ₽</b>)\n",
-        f"📋 <b>ПОСЛЕДНИЕ РАСХОДЫ ({len(obj_expenses)} записей):</b>"
+        f"<b>Израсходовано:</b> <b>{total_spent:,.0f} ₽</b> из {budget_limit:,.0f} ₽",
+        f"<b>Освоение сметы:</b> <code>[{bar}] {pct}%</code> (Остаток: <b>{rem:,.0f} ₽</b>)\n",
+        f"<b>ПОСЛЕДНИЕ РАСХОДЫ ({len(obj_expenses)} записей):</b>"
     ]
     
     if not obj_expenses:
@@ -559,14 +566,14 @@ def get_object_budget_hud(obj_name: str):
     else:
         for e in obj_expenses[:5]:
             d_str = e.get("date", "--")
-            lines.append(f"• 💳 <b>{e.get('amount', 0):,.0f} ₽</b> ({d_str}) — <i>{html.escape(e.get('description', ''))}</i>")
+            lines.append(f"• <b>{e.get('amount', 0):,.0f} ₽</b> ({d_str}) — <i>{html.escape(e.get('description', ''))}</i>")
             
-    lines.append(f"\n💡 <i>Для добавления расхода напишите: <code>расход 15000 {obj_clean} [описание]</code></i>")
+    lines.append(f"\n<i>Для добавления расхода напишите: <code>расход 15000 {obj_clean} [описание]</code></i>")
     
     markup = {
         "inline_keyboard": [
-            [{"text": f"➕ Добавить расход ({obj_clean})", "callback_data": f"exp_add_prompt_{obj_clean}"}],
-            [{"text": "« 🔙 Ко всем объектам 615-ФЗ", "callback_data": "nav_work"}]
+            [{"text": f"Добавить расход ({obj_clean})", "callback_data": f"exp_add_prompt_{obj_clean}"}],
+            [{"text": "« Ко всем объектам 615-ФЗ", "callback_data": "nav_work"}]
         ]
     }
     return "\n".join(lines), markup
@@ -578,7 +585,7 @@ def get_morning_briefing_card(user_name="Сергей"):
     • Boxing Lab: готовность атлетов и допуск к тренировкам (athletes_db.json)
     • Оперативные задачи с дедлайнами и прогресс-баром (tasks.json)
     • Стройконтроль 615-ФЗ и накопительные расходы КС-2 (expenses.json)
-    • Служебная почта Mail.ru (Почта Руководителя) с подсчетом непрочитанных
+    • Служебная почта Mail.ru (vsr2023@internet.ru) с подсчетом непрочитанных
     • Здоровье и статус служб экосистемы 24/7
     """
     tasks = load_tasks()
@@ -622,8 +629,8 @@ def get_morning_briefing_card(user_name="Сергей"):
 
     # 2. Boxing Performance Lab readiness (athletes_db.json)
     box_paths = [
-        os.path.join(PROJECT_ROOT, "Спорт", "Разработка", "Тест_утром", "athletes_db.json"),
-        os.path.join(PROJECT_ROOT, "boxing-deploy", "athletes_db.json"),
+        os.path.expanduser("~/projects/boxing-sc-lab/data/athletes_db.json"),
+        os.path.join(PROJECT_ROOT, "Спорт", "Разработка", "Boxing_SC_Lab", "data", "athletes_db.json"),
         os.path.join(PROJECT_ROOT, "data_backup", "athletes_db.json")
     ]
     box_db_file = next((p for p in box_paths if os.path.exists(p)), None)
@@ -639,32 +646,32 @@ def get_morning_briefing_card(user_name="Сергей"):
                 latest = hist[-1] if hist else {}
                 sc = latest.get("score", 0)
                 zn = latest.get("zone", "GREEN")
-                z_icon = "🟢" if zn == "GREEN" else ("🟡" if zn == "YELLOW" else "🔴")
+                z_icon = f"[{zn}]"
                 bpm = latest.get("metrics", {}).get("bpm", "--")
                 rmssd = latest.get("metrics", {}).get("rmssd", "--")
                 shtange = latest.get("metrics", {}).get("shtange") or sr.get("baselines", {}).get("shtange_baseline", "--")
                 boxing_lines.append(f"• <b>Сергей Романов:</b> <b>{sc:.0f}%</b> {z_icon} (Зона: <b>{zn}</b>)")
                 boxing_lines.append(f"  <i>ЧСС: {bpm} уд/м | rMSSD: {rmssd} мс | Штанге: {shtange} с</i>")
-                boxing_lines.append(f"• 🥊 <b>Допуск к спаррингам:</b> 🟢 <b>100% нагрузка</b> (в кэмпе: {len(athletes)} атлет)")
+                boxing_lines.append(f"• <b>Допуск к спаррингам:</b> <b>100% нагрузка</b> (в кэмпе: {len(athletes)} атлет)")
             else:
                 boxing_lines.append(f"• Атлетов в кэмпе: <b>{len(athletes)}</b> | Boxing Lab 24/7 активен")
         except Exception as e:
-            boxing_lines.append("• 🥊 Boxing Lab: @Performance555_bot готов к замерам")
+            boxing_lines.append("• Boxing Lab: @Performance555_bot готов к замерам")
     else:
-        boxing_lines.append("• 🥊 Boxing Lab: @Performance555_bot готов к замерам")
+        boxing_lines.append("• Boxing Lab: @Performance555_bot готов к замерам")
 
     # 3. Задачи и прогресс
     tot_tasks = len(active_tasks)
     done_count = len(done_tasks)
     pct = round((done_count / tot_tasks * 100)) if tot_tasks > 0 else 0
     bar = "█" * (pct // 10) + "░" * (10 - pct // 10)
-    tasks_bar_line = f"📊 <b>Прогресс:</b> <code>[{bar}] {pct}%</code> ({done_count}/{tot_tasks} выполнено)"
+    tasks_bar_line = f"<b>Прогресс:</b> <code>[{bar}] {pct}%</code> ({done_count}/{tot_tasks} выполнено)"
 
     # 4. 615-ФЗ & Расходы
     expenses = load_expenses()
     total_month_exp = sum([float(e.get("amount", 0)) for e in expenses])
 
-    # 5. Почта Mail.ru (Почта Руководителя)
+    # 5. Почта Mail.ru (vsr2023@internet.ru)
     mail_lines = []
     try:
         import email_security_guard
@@ -680,62 +687,62 @@ def get_morning_briefing_card(user_name="Сергей"):
             m_tot = re.search(r"MESSAGES\s+(\d+)", status_str)
             u_cnt = int(m_unseen.group(1)) if m_unseen else 0
             t_cnt = int(m_tot.group(1)) if m_tot else 0
-            badge = f"🔥 <b>{u_cnt} новых!</b>" if u_cnt > 0 else "нет новых"
-            mail_lines.append(f"• <code>Почта Руководителя</code>: {badge} (всего: {t_cnt})")
-            mail_lines.append("• 🛡 <i>Антифишинг & Защита вложений: Активна 24/7</i>")
+            badge = f"<b>{u_cnt} новых!</b>" if u_cnt > 0 else "нет новых"
+            mail_lines.append(f"• <code>vsr2023@internet.ru</code>: {badge} (всего: {t_cnt})")
+            mail_lines.append("• <i>Антифишинг & Защита вложений: Активна 24/7</i>")
     except Exception:
-        mail_lines.append("• <code>Почта Руководителя</code>: 🟢 В штатном режиме")
+        mail_lines.append("• <code>vsr2023@internet.ru</code>: В штатном режиме")
 
     lines = [
-        f"🌅 <b>УТРЕННИЙ БРИФИНГ РУКОВОДИТЕЛЯ</b>",
-        f"📅 <i>{day_name}, {today_str} // 08:00 MSK</i>",
+        f"<b>УТРЕННИЙ БРИФИНГ РУКОВОДИТЕЛЯ</b>",
+        f"<i>{day_name}, {today_str} // 08:00 MSK</i>",
         f"Доброе утро, <b>{user_name}</b>!\n",
-        f"🌤 <b>ПОГОДА НА ОБЪЕКТАХ:</b>"
+        f"<b>ПОГОДА НА ОБЪЕКТАХ:</b>"
     ]
     lines.extend(w_lines)
     lines.append("")
 
-    lines.append("🥊 <b>BOXING LAB // ГОТОВНОСТЬ АТЛЕТОВ:</b>")
+    lines.append("<b>BOXING LAB // ГОТОВНОСТЬ АТЛЕТОВ:</b>")
     lines.extend(boxing_lines)
     lines.append("")
 
-    lines.append("📋 <b>ОПЕРАТИВНЫЕ ЗАДАЧИ:</b>")
+    lines.append("<b>ОПЕРАТИВНЫЕ ЗАДАЧИ:</b>")
     lines.append(tasks_bar_line)
     if top_tasks:
         for t in top_tasks:
-            icon = "🔥" if t.get("priority") == "high" else "⏳"
+            icon = "[!]" if t.get("priority") == "high" else "[•]"
             lines.append(f"  {icon} <code>#{t.get('id')}</code> {html.escape(t.get('text', ''))[:55]}")
     else:
-        lines.append("  ✅ <i>Все задачи закрыты!</i>")
+        lines.append("  <i>Все задачи закрыты!</i>")
     lines.append("")
 
     lines.extend([
-        "💼 <b>СТРОЙКОНТРОЛЬ 615-ФЗ & КС-2:</b>",
-        "• 🏠 <b>Котово / Дубовка / Михайловка:</b> Контроль АОСР, закрытие смет",
-        f"• 💰 Учтенные расходы проекта: <b>{total_month_exp:,.0f} ₽</b>\n",
-        "📧 <b>СЛУЖЕБНАЯ ПОЧТА:</b>"
+        "<b>СТРОЙКОНТРОЛЬ 615-ФЗ & КС-2:</b>",
+        "• <b>Котово / Дубовка / Михайловка:</b> Контроль АОСР, закрытие смет",
+        f"• Учтенные расходы проекта: <b>{total_month_exp:,.0f} ₽</b>\n",
+        "<b>СЛУЖЕБНАЯ ПОЧТА:</b>"
     ])
     lines.extend(mail_lines)
     lines.append("")
 
     lines.extend([
-        "🛡 <b>СОСТОЯНИЕ СИСТЕМЫ:</b>",
-        "• 🟢 <i>Все службы 24/7 активны (Вектор + Бокс Лаб + Юзербот)</i>"
+        "<b>СОСТОЯНИЕ СИСТЕМЫ:</b>",
+        "• <i>Все службы 24/7 активны (Вектор + Бокс Лаб + Юзербот)</i>"
     ])
 
     markup = {
         "inline_keyboard": [
             [
-                {"text": "📋 Задачи", "callback_data": "nav_tasks"},
-                {"text": "💼 Объекты 615-ФЗ", "callback_data": "nav_work"}
+                {"text": "Задачи", "callback_data": "nav_tasks"},
+                {"text": "Объекты 615-ФЗ", "callback_data": "nav_work"}
             ],
             [
-                {"text": "🥊 Boxing Lab", "url": "https://t.me/Performance555_bot"},
-                {"text": "📧 Почта", "callback_data": "nav_mail"}
+                {"text": "Boxing Lab", "url": "https://t.me/Performance555_bot"},
+                {"text": "Почта", "callback_data": "nav_mail"}
             ],
             [
-                {"text": "🔄 Обновить брифинг", "callback_data": "action_refresh_briefing"},
-                {"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}
+                {"text": "Обновить брифинг", "callback_data": "action_refresh_briefing"},
+                {"text": "« В Главное Меню", "callback_data": "nav_main"}
             ]
         ]
     }
@@ -770,56 +777,56 @@ def get_evening_briefing_card(user_name="Сергей"):
     today_exp_sum = sum(float(e.get("amount", 0)) for e in today_exp)
 
     lines = [
-        f"🌙 <b>ВЕЧЕРНИЙ ИТОГОВЫЙ ДАЙДЖЕСТ РУКОВОДИТЕЛЯ</b>",
-        f"📅 <i>{day_name}, {today_display} // 21:30 MSK</i>",
+        f"<b>ВЕЧЕРНИЙ ИТОГОВЫЙ ДАЙДЖЕСТ РУКОВОДИТЕЛЯ</b>",
+        f"<i>{day_name}, {today_display} // 21:30 MSK</i>",
         f"Добрый вечер, <b>{user_name}</b>!\n",
-        f"📊 <b>ИТОГИ ЗАДАЧ ЗА ДЕНЬ:</b>",
+        f"<b>ИТОГИ ЗАДАЧ ЗА ДЕНЬ:</b>",
         f"• Прогресс: <code>[{bar}] {pct}%</code> (выполнено: <b>{done_count}</b> из {total_tasks})"
     ]
 
     if urgent_pending:
-        lines.append(f"• 🔥 <b>Внимание:</b> {len(urgent_pending)} срочных задач требуют контроля!")
+        lines.append(f"• <b>Внимание:</b> {len(urgent_pending)} срочных задач требуют контроля!")
     else:
-        lines.append("• 🟢 <i>Все срочные задачи закрыты либо под контролем.</i>")
+        lines.append("• <i>Все срочные задачи закрыты либо под контролем.</i>")
     lines.append("")
 
-    lines.append("⏳ <b>ПЕРЕХОДЯТ НА ЗАВТРА (ТОП-3):</b>")
+    lines.append("<b>ПЕРЕХОДЯТ НА ЗАВТРА (ТОП-3):</b>")
     if pending_tasks:
         for t in pending_tasks[:3]:
-            icon = "🔥" if t.get("priority") == "high" else "⏳"
+            icon = "[!]" if t.get("priority") == "high" else "[•]"
             lines.append(f"  {icon} <code>#{t.get('id')}</code> {html.escape(t.get('text', ''))[:50]}")
     else:
-        lines.append("  ✅ <i>Все задачи закрыты на 100%!</i>")
+        lines.append("  <i>Все задачи закрыты на 100%!</i>")
     lines.append("")
 
-    lines.append("💰 <b>ФИНАНСЫ И СТРОЙКА 615-ФЗ:</b>")
+    lines.append("<b>ФИНАНСЫ И СТРОЙКА 615-ФЗ:</b>")
     if today_exp:
-        lines.append(f"• 💳 Зафиксировано расходов за день: <b>{today_exp_sum:,.0f} ₽</b> ({len(today_exp)} операций)")
+        lines.append(f"• Зафиксировано расходов за день: <b>{today_exp_sum:,.0f} ₽</b> ({len(today_exp)} операций)")
         for e in today_exp[:3]:
             lines.append(f"  - <i>{e.get('object', '615')}: {e.get('amount', 0):,.0f} ₽ ({html.escape(e.get('description', ''))[:30]})</i>")
     else:
-        lines.append("• 💳 Новых расходов за сегодня не вносилось")
+        lines.append("• Новых расходов за сегодня не вносилось")
     lines.append("")
 
-    lines.append("🥊 <b>BOXING LAB // ВЕЧЕРНИЙ ПРОТОКОЛ:</b>")
-    lines.append("• 💊 <b>Фармакоррекция (сон):</b> Ашваганда + Хелатный магний (за 30-40 мин до сна)")
-    lines.append("• 🌙 <b>Режим восстановления:</b> Сон не менее 8 часов для нормализации rMSSD к утреннему замеру")
+    lines.append("<b>BOXING LAB // ВЕЧЕРНИЙ ПРОТОКОЛ:</b>")
+    lines.append("• <b>Фармакоррекция (сон):</b> Ашваганда + Хелатный магний (за 30-40 мин до сна)")
+    lines.append("• <b>Режим восстановления:</b> Сон не менее 8 часов для нормализации rMSSD к утреннему замеру")
     lines.append("")
 
-    lines.append("🛡 <b>СИСТЕМА:</b> Все сервисы 24/7 работают штатно.")
+    lines.append("<b>СИСТЕМА:</b> Все сервисы 24/7 работают штатно.")
 
     markup = {
         "inline_keyboard": [
             [
-                {"text": "📋 Задачи", "callback_data": "nav_tasks"},
-                {"text": "➕ Добавить задачу", "callback_data": "task_add_prompt"}
+                {"text": "Задачи", "callback_data": "nav_tasks"},
+                {"text": "Добавить задачу", "callback_data": "task_add_prompt"}
             ],
             [
-                {"text": "💼 Объекты 615-ФЗ", "callback_data": "nav_work"},
-                {"text": "💰 Расходы (КС-2)", "callback_data": "nav_work"}
+                {"text": "Объекты 615-ФЗ", "callback_data": "nav_work"},
+                {"text": "Расходы (КС-2)", "callback_data": "nav_work"}
             ],
             [
-                {"text": "« 🔙 В Главное Меню", "callback_data": "nav_main"}
+                {"text": "« В Главное Меню", "callback_data": "nav_main"}
             ]
         ]
     }
@@ -838,7 +845,7 @@ def create_full_system_backup_zip():
         ("notes.json", "/home/home/Документы/2/notes.json"),
         ("expenses.json", "/home/home/Документы/2/expenses.json"),
         ("reminders.json", "/home/home/Документы/2/reminders.json"),
-        ("athletes_db.json", "/home/home/Документы/2/Спорт/Разработка/Тест_утром/athletes_db.json")
+        ("athletes_db.json", os.path.expanduser("~/projects/boxing-sc-lab/data/athletes_db.json"))
     ]
     
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:

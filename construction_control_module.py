@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-🏗 ИИ-ВЕКТОР: МОДУЛЬ «ЦИФРОВОЙ ПРОРАБ 6.0»
+ИИ-ВЕКТОР: МОДУЛЬ «ЦИФРОВОЙ ПРОРАБ 6.0»
 Многопрофильный интеллектуальный строительный контроль и управление проектами:
-1. ♨️ ТЕПЛОСНАБЖЕНИЕ (Отопление, котельные, теплотрассы, опрессовка)
-2. 💧 ВОДОСНАБЖЕНИЕ (Наружные сети ХВС/ГВС, ПЭ-100, ГНБ бурение, колодцы)
-3. 🚽 КАНАЛИЗАЦИЯ И ВОДООТВЕДЕНИЕ (Самотечные и напорные коллекторы, КНС, тройники 45°)
-4. 🛣 ДОРОЖНОЕ СТРОИТЕЛЬСТВО (Асфальтирование, фрезерование, щебень, бордюры)
-5. 🌳 БЛАГОУСТРОЙСТВО И ПАРКИ (Брусчатка, плитка, поребрики, МАФ, озеленение, автополив)
-6. 🏢 ОБЩЕСТРОИТЕЛЬНЫЕ РАБОТЫ (Монолит, армирование, кладка, кровли, фасады)
+1. ТЕПЛОСНАБЖЕНИЕ (Отопление, котельные, теплотрассы, опрессовка)
+2. ВОДОСНАБЖЕНИЕ (Наружные сети ХВС/ГВС, ПЭ-100, ГНБ бурение, колодцы)
+3. КАНАЛИЗАЦИЯ И ВОДООТВЕДЕНИЕ (Самотечные и напорные коллекторы, КНС, тройники 45°)
+4. ДОРОЖНОЕ СТРОИТЕЛЬСТВО (Асфальтирование, фрезерование, щебень, бордюры)
+5. БЛАГОУСТРОЙСТВО И ПАРКИ (Брусчатка, плитка, поребрики, МАФ, озеленение, автополив)
+6. ОБЩЕСТРОИТЕЛЬНЫЕ РАБОТЫ (Монолит, армирование, кладка, кровли, фасады)
 
 Функционал мирового уровня Procore & Autodesk Construction Cloud:
 • Голосовая исполнительная документация «с объекта в 1 клик»
@@ -22,7 +22,7 @@ import json
 import re
 import html
 import time
-import datetime
+from datetime import datetime, date
 from pathlib import Path
 
 # Импорт docx для генерации файлов Word
@@ -47,42 +47,42 @@ MASTER_SPEC_FILE = os.path.join(DEV_DIR, "psd_master_specifications.json")
 # ----------------- УНИВЕРСАЛЬНАЯ БАЗА СТРОИТЕЛЬНЫХ НАПРАВЛЕНИЙ -----------------
 DISCIPLINES_META = {
     "теплоснабжение": {
-        "title": "♨️ Теплоснабжение и Отопление",
+        "title": "Теплоснабжение и Отопление",
         "system_default": "Центральное отопление",
         "norm": "СП 124.13330.2012 / СП 73.13330.2016",
         "unit_default": "м",
         "default_material": "Труба полипропиленовая армированная PN25 (ГОСТ 32415-2013)"
     },
     "водоснабжение": {
-        "title": "💧 Водоснабжение и Сети",
+        "title": "Водоснабжение и Сети",
         "system_default": "Холодное водоснабжение (ХВС)",
         "norm": "СП 31.13330.2012 / ГОСТ 18599-2001",
         "unit_default": "м",
         "default_material": "Труба полиэтиленовая ПЭ-100 SDR 11 (ГОСТ 18599-2001)"
     },
     "канализация": {
-        "title": "🚽 Канализация и Водоотведение",
+        "title": "Канализация и Водоотведение",
         "system_default": "Внутренняя/Наружная канализация (КНС)",
         "norm": "СП 32.13330.2018 / СП 30.13330.2020",
         "unit_default": "м",
         "default_material": "Труба канализационная полипропиленовая d110 (ГОСТ 32414-2013)"
     },
     "дороги": {
-        "title": "🛣 Ремонт дорог и Асфальтирование",
+        "title": "Ремонт дорог и Асфальтирование",
         "system_default": "Дорожное покрытие и основание",
         "norm": "СП 78.13330.2012 / ГОСТ Р 54401-2020",
         "unit_default": "кв.м",
         "default_material": "Асфальтобетон мелкозернистый плотный тип Б марка II (ГОСТ 9128)"
     },
     "парки": {
-        "title": "🌳 Благоустройство, Парки и Скверы",
+        "title": "Благоустройство, Парки и Скверы",
         "system_default": "Благоустройство территории и мощение",
         "norm": "СП 82.13330.2016 / ГОСТ 17608-2017",
         "unit_default": "кв.м",
         "default_material": "Плитка тротуарная вибропрессованная 60мм на гарцовке М150"
     },
     "общестрой": {
-        "title": "🏗 Общестроительные работы (Монолит / Кровли)",
+        "title": "Общестроительные работы (Монолит / Кровли)",
         "system_default": "Несущие конструкции и кровля",
         "norm": "СП 70.13330.2012 / СП 17.13330.2017",
         "unit_default": "куб.м",
@@ -250,7 +250,7 @@ def generate_aosr_document(parsed_data, output_format="docx"):
     materials_str = ";\n• ".join(parsed_data["materials"])
 
     # 1. Текстовая версия Markdown
-    md_content = f"""# 🏛 АКТ ОСВИДЕТЕЛЬСТВОВАНИЯ СКРЫТЫХ РАБОТ № {act_no}
+    md_content = f"""# АКТ ОСВИДЕТЕЛЬСТВОВАНИЯ СКРЫТЫХ РАБОТ № {act_no}
 **(Форма составлена в соответствии с Приложением № 3 к РД 11-02-2006)**
 
 **Дата составления:** «{date_now.split('.')[0]}» {get_month_name(int(date_now.split('.')[1]))} {date_now.split('.')[2]} г.  
@@ -298,7 +298,7 @@ def generate_aosr_document(parsed_data, output_format="docx"):
 
 ---
 
-### ✍️ ПОДПИСИ СТОРОН:
+### ПОДПИСИ СТОРОН:
 
 | Представитель Генподрядчика | Представитель Строительного Контроля |
 |:---|:---|
@@ -480,7 +480,7 @@ def audit_subcontractor_report(text_or_data):
         claimed_pct = float(pct_match.group(1))
         if claimed_pct >= 75.0 and any(k in t_lower for k in ["победы", "школьн", "мира"]):
             fraud_warnings.append(
-                f"🚨 <b>КРИТИЧЕСКАЯ ПРИПИСКА ОБЪЕМОВ:</b> Бригада заявляет <b>{claimed_pct:.0f}%</b> при реальном факте ~25% (завышение в 3.2 раза!)."
+                f"[!] <b>КРИТИЧЕСКАЯ ПРИПИСКА ОБЪЕМОВ:</b> Бригада заявляет <b>{claimed_pct:.0f}%</b> при реальном факте ~25% (завышение в 3.2 раза!)."
             )
 
     meters_match = re.search(r'(\d+(?:[.,]\d+)?)\s*(?:м|метр)', t_lower)
@@ -488,21 +488,21 @@ def audit_subcontractor_report(text_or_data):
         claimed_m = float(meters_match.group(1).replace(',', '.'))
         if claimed_m > 150.0 and any(k in t_lower for k in ["победы", "чердак"]):
             fraud_warnings.append(
-                f"⚠️ <b>ПРЕВЫШЕНИЕ СМЕТНОГО ЛИМИТА:</b> Заявлено <b>{claimed_m:.1f} м</b> при проектном лимите розлива ~140 м."
+                f"[!] <b>ПРЕВЫШЕНИЕ СМЕТНОГО ЛИМИТА:</b> Заявлено <b>{claimed_m:.1f} м</b> при проектном лимите розлива ~140 м."
             )
 
     # 2. Брак: Теплоснабжение и Сантехника
     if any(k in t_lower for k in ["полипропилен кран", "пластиковый кран", "ппр кран", "кран ппр"]) and any(s in t_lower for s in ["отоплен", "чердак", "розлив", "тепло"]):
-        defect_warnings.append("🛑 <b>БРАК (ПЛАСТИКОВЫЕ КРАНЫ):</b> На отоплении применены краны ППР. Требование: немедленно срезать и установить полнопроходную латунь PN25/PN40.")
+        defect_warnings.append("[!] <b>БРАК (ПЛАСТИКОВЫЕ КРАНЫ):</b> На отоплении применены краны ППР. Требование: немедленно срезать и установить полнопроходную латунь PN25/PN40.")
 
     if any(k in t_lower for k in ["проволок", "на проволоке", "подвязали"]):
-        defect_warnings.append("🛑 <b>НАРУШЕНИЕ СП 73.13330 (ПРОВОЛОКА):</b> Трубы подвешены на проволоку. Требование: установить жесткие оцинкованные траверсы.")
+        defect_warnings.append("[!] <b>НАРУШЕНИЕ СП 73.13330 (ПРОВОЛОКА):</b> Трубы подвешены на проволоку. Требование: установить жесткие оцинкованные траверсы.")
 
     if any(k in t_lower for k in ["врезка 90", "тройник 90", "под 90"]) and any(c in t_lower for c in ["кнс", "канализац", "слив", "лежак"]):
-        defect_warnings.append("🛑 <b>НАРУШЕНИЕ СП 30.13330 (ВРЕЗКИ 90°):</b> Врезка в лежак под прямым углом 90°. Требование: перепаять на косые тройники 45° по самотеку.")
+        defect_warnings.append("[!] <b>НАРУШЕНИЕ СП 30.13330 (ВРЕЗКИ 90°):</b> Врезка в лежак под прямым углом 90°. Требование: перепаять на косые тройники 45° по самотеку.")
 
     if any(k in t_lower for k in ["американка до крана", "муфта до крана"]):
-        defect_warnings.append("🛑 <b>БЛОКИРОВКА СТОЯКА:</b> Американка впаяна ДО крана. Требование: монтаж строго ПОСЛЕ крана к стояку.")
+        defect_warnings.append("[!] <b>БЛОКИРОВКА СТОЯКА:</b> Американка впаяна ДО крана. Требование: монтаж строго ПОСЛЕ крана к стояку.")
 
     is_insulation_mismatch = (
         re.search(r'89.*(?:40|сорок|труб)', t_lower)
@@ -512,30 +512,30 @@ def audit_subcontractor_report(text_or_data):
         or "89 на 40" in t_lower
     )
     if is_insulation_mismatch:
-        defect_warnings.append("⚠️ <b>БРАК ТЕПЛОИЗОЛЯЦИИ:</b> Несовпадение диаметра утеплителя (89 на 40) или прозрачный скотч. Заменить на Энергофлекс 40x9 со скотчем TPL.")
+        defect_warnings.append("[!] <b>БРАК ТЕПЛОИЗОЛЯЦИИ:</b> Несовпадение диаметра утеплителя (89 на 40) или прозрачный скотч. Заменить на Энергофлекс 40x9 со скотчем TPL.")
 
     # 3. Брак: Дорожное строительство
     if any(k in t_lower for k in ["в дождь", "в лужу", "по мокрому", "на сырое"]) and any(d in t_lower for d in ["асфальт", "дорог", "укладк"]):
-        defect_warnings.append("🛑 <b>ГРУБЕЙШИЙ БРАК СП 78.13330:</b> Укладка асфальтобетона в дождь или по мокрому основанию категорически запрещена.")
+        defect_warnings.append("[!] <b>ГРУБЕЙШИЙ БРАК СП 78.13330:</b> Укладка асфальтобетона в дождь или по мокрому основанию категорически запрещена.")
 
     if any(k in t_lower for k in ["без подгрунтовки", "без эмульсии", "без битума"]) and "асфальт" in t_lower:
-        defect_warnings.append("🛑 <b>НАРУШЕНИЕ ТЕХНОЛОГИИ:</b> Отсутствует розлив битумной эмульсии (подгрунтовка) — риск отслоения асфальта.")
+        defect_warnings.append("[!] <b>НАРУШЕНИЕ ТЕХНОЛОГИИ:</b> Отсутствует розлив битумной эмульсии (подгрунтовка) — риск отслоения асфальта.")
 
     if any(k in t_lower for k in ["бордюр на землю", "бордюр без бетона", "без замка"]) and "бордюр" in t_lower:
-        defect_warnings.append("🛑 <b>БРАК УСТАНОВКИ БОРДЮРА:</b> Бортовой камень должен монтироваться на бетонную обойму B15 с замком.")
+        defect_warnings.append("[!] <b>БРАК УСТАНОВКИ БОРДЮРА:</b> Бортовой камень должен монтироваться на бетонную обойму B15 с замком.")
 
     # 4. Брак: Благоустройство и Парки
     if any(k in t_lower for k in ["плитка на землю", "брусчатка без щебня", "без геотекстиля"]) and any(p in t_lower for p in ["плитк", "брусчатк", "парк"]):
-        defect_warnings.append("🛑 <b>НАРУШЕНИЕ СП 82.13330 (БЛАГОУСТРОЙСТВО):</b> Укладка плитки без песчано-щебеночной подготовки и геотекстиля приведет к провалам.")
+        defect_warnings.append("[!] <b>НАРУШЕНИЕ СП 82.13330 (БЛАГОУСТРОЙСТВО):</b> Укладка плитки без песчано-щебеночной подготовки и геотекстиля приведет к провалам.")
 
     # 5. Брак: Общестрой и Монолит
     if any(k in t_lower for k in ["без вибрирования", "раковины в бетоне", "не вибрировали"]) and "бетон" in t_lower:
-        defect_warnings.append("🛑 <b>НАРУШЕНИЕ СП 70.13330:</b> Укладка монолитного бетона без глубинного вибрирования снижает марку прочности.")
+        defect_warnings.append("[!] <b>НАРУШЕНИЕ СП 70.13330:</b> Укладка монолитного бетона без глубинного вибрирования снижает марку прочности.")
 
     if any(k in t_lower for k in ["арматура на грунте", "без стульчиков", "без фиксаторов"]) and "арматур" in t_lower:
-        defect_warnings.append("🛑 <b>БРАК АРМИРОВАНИЯ:</b> Отсутствуют пластиковые фиксаторы защитного слоя бетона (арматура лежит на грунте).")
+        defect_warnings.append("[!] <b>БРАК АРМИРОВАНИЯ:</b> Отсутствуют пластиковые фиксаторы защитного слоя бетона (арматура лежит на грунте).")
 
-    verdict = "🛑 <b>ОТКЛОНЕНО (ВЫЯВЛЕН ПОДЛОГ / БРАК)</b>" if (defect_warnings or fraud_warnings) else "🟢 <b>ПРИНЯТО СТРОЙКОНТРОЛЕМ (100% СООТВЕТСТВИЕ ГОСТ/СП)</b>"
+    verdict = "[!] <b>ОТКЛОНЕНО (ВЫЯВЛЕН ПОДЛОГ / БРАК)</b>" if (defect_warnings or fraud_warnings) else "<b>ПРИНЯТО СТРОЙКОНТРОЛЕМ (100% СООТВЕТСТВИЕ ГОСТ/СП)</b>"
 
     return {
         "verdict": verdict,
@@ -551,19 +551,19 @@ def get_construction_dashboard_text():
     avg_pct = (total_rub / total_contract * 100.0) if total_contract > 0 else 0.0
 
     lines = [
-        "💼 <b>РАЗДЕЛ: «РАБОТА» («ЦИФРОВОЙ ПРОРАБ 6.0»)</b>\n",
-        "🏢 <b>Организация:</b> ООО «Компания Парадигма» (С. А. Романов)",
-        f"📊 <b>Сводное выполнение по объектам:</b> <b>{avg_pct:.1f}%</b> ({total_rub:,.0f} ₽)\n",
-        "📋 <b>НАПРАВЛЕНИЯ И АКТИВНЫЕ ОБЪЕКТЫ:</b>",
-        "• ♨️ <b>Теплоснабжение:</b> Котово (Победы 8, Школьная 6, Чапаева 1, Лаврова 6, 11)",
-        "• 💧 <b>Водоснабжение:</b> Михайловка (Некрасова 26), Краснослободск (ГНБ)",
-        "• 🚽 <b>Канализация:</b> Котово (Мира 149, Школьная 6), Михайловка (Некрасова 1а)",
-        "• 🛣 <b>Ремонт дорог:</b> Асфальтирование, фрезерование, щебень, бордюры",
-        "• 🌳 <b>Благоустройство & Парки:</b> Тротуарная плитка, МАФ, поребрики, автополив",
-        "• 🏗 <b>Общестрой:</b> Монолитные работы, кладка, гидроизоляция кровель\n",
-        "🎙 <b>Голосовой рапорт в 1 клик:</b>",
+        "<b>РАЗДЕЛ: «РАБОТА» («ЦИФРОВОЙ ПРОРАБ 6.0»)</b>\n",
+        "<b>Организация:</b> ООО «Компания Парадигма» (С. А. Романов)",
+        f"<b>Сводное выполнение по объектам:</b> <b>{avg_pct:.1f}%</b> ({total_rub:,.0f} ₽)\n",
+        "<b>НАПРАВЛЕНИЯ И АКТИВНЫЕ ОБЪЕКТЫ:</b>",
+        "• <b>Теплоснабжение:</b> Котово (Победы 8, Школьная 6, Чапаева 1, Лаврова 6, 11)",
+        "• <b>Водоснабжение:</b> Михайловка (Некрасова 26), Краснослободск (ГНБ)",
+        "• <b>Канализация:</b> Котово (Мира 149, Школьная 6), Михайловка (Некрасова 1а)",
+        "• <b>Ремонт дорог:</b> Асфальтирование, фрезерование, щебень, бордюры",
+        "• <b>Благоустройство & Парки:</b> Тротуарная плитка, МАФ, поребрики, автополив",
+        "• <b>Общестрой:</b> Монолитные работы, кладка, гидроизоляция кровель\n",
+        "<b>Голосовой рапорт в 1 клик:</b>",
         "<i>Надиктуйте боту: «Закатали 250 кв.м асфальта Б-2, поставили 40 бордюров» или «Михайловка, смонтировали 35м трубы d32».</i>\n",
-        "✨ Вектор мгновенно создаст АОСР по РД 11-02-2006 и обновит накопительную КС-2!"
+        "Вектор мгновенно создаст АОСР по РД 11-02-2006 и обновит накопительную КС-2!"
     ]
     return "\n".join(lines)
 
@@ -574,32 +574,32 @@ def process_voice_or_text_construction_report(text):
     cumul = update_cumulative_progress(parsed)
 
     lines = [
-        f"🏗 <b>РАПОРТ С ОБЪЕКТА ОБРАБОТАН («ЦИФРОВОЙ ПРОРАБ 6.0»)</b>\n",
-        f"📍 <b>Объект:</b> {parsed['city']}, {parsed['address']}",
-        f"📌 <b>Направление:</b> {parsed['discipline_title']}",
-        f"📏 <b>Выполнено:</b> <b>{parsed['volume']:.1f} {parsed['unit']}</b>" + (f" | Штучных элементов: <b>{parsed['pcs_count']} шт.</b>" if parsed['pcs_count'] > 0 else ""),
-        f"📦 <b>Материалы:</b> {', '.join(parsed['materials'][:2])}\n",
-        f"📄 <b>СФОРМИРОВАН ОФИЦИАЛЬНЫЙ АОСР:</b>",
+        f"<b>РАПОРТ С ОБЪЕКТА ОБРАБОТАН («ЦИФРОВОЙ ПРОРАБ 6.0»)</b>\n",
+        f"• Объект: {parsed['city']}, {parsed['address']}",
+        f"• Направление: {parsed['discipline_title']}",
+        f"• Выполнено: <b>{parsed['volume']:.1f} {parsed['unit']}</b>" + (f" | Штучных элементов: <b>{parsed['pcs_count']} шт.</b>" if parsed['pcs_count'] > 0 else ""),
+        f"• Материалы: {', '.join(parsed['materials'][:2])}\n",
+        f"<b>СФОРМИРОВАН ОФИЦИАЛЬНЫЙ АОСР:</b>",
         f"• Номер акта: <code>{aosr['act_num']}</code> (РД 11-02-2006)",
         f"• Файл Word: <code>{os.path.basename(aosr['docx_path']) if aosr['docx_path'] else 'Создан'}</code>",
         f"• Стандарт: <code>{parsed['norm']}</code>\n",
-        f"📊 <b>НАКОПИТЕЛЬНЫЙ ИТОГ (КС-2 / КС-3):</b>",
-        f"• Прогресс объекта: <code>{cumul['old_pct']:.1f}% ➔ {cumul['new_pct']:.1f}%</code> (<b>+{cumul['added_pct']:.1f}%</b>)",
+        f"<b>НАКОПИТЕЛЬНЫЙ ИТОГ (КС-2 / КС-3):</b>",
+        f"• Прогресс объекта: <code>{cumul['old_pct']:.1f}% -> {cumul['new_pct']:.1f}%</code> (<b>+{cumul['added_pct']:.1f}%</b>)",
         f"• Сумма к закрытию: <b>+{cumul['added_rub']:,.0f} ₽</b> (Итого: {cumul['new_rub']:,.0f} ₽)\n",
-        f"🛡 <b>ВЕРДИКТ СТРОЙКОНТРОЛЯ:</b> {audit['verdict']}"
+        f"<b>ВЕРДИКТ СТРОЙКОНТРОЛЯ:</b> {audit['verdict']}"
     ]
 
     if audit["defect_warnings"]:
-        lines.append("\n⚠️ <b>ТЕХНОЛОГИЧЕСКИЕ ПРЕДПИСАНИЯ:</b>")
+        lines.append("\n<b>ТЕХНОЛОГИЧЕСКИЕ ПРЕДПИСАНИЯ:</b>")
         for w in audit["defect_warnings"]:
             lines.append(f"• {w}")
 
     if audit["fraud_warnings"]:
-        lines.append("\n🚨 <b>СИГНАЛЫ АНТИФРОД-КОНТРОЛЯ:</b>")
+        lines.append("\n<b>СИГНАЛЫ АНТИФРОД-КОНТРОЛЯ:</b>")
         for fw in audit["fraud_warnings"]:
             lines.append(f"• {fw}")
 
-    lines.append("\n✅ <i>Акт скрытых работ сформирован и готов к печати / подписанию!</i>")
+    lines.append("\n<i>Акт скрытых работ сформирован и готов к печати / подписанию!</i>")
 
     return {
         "text": "\n".join(lines),
@@ -608,7 +608,183 @@ def process_voice_or_text_construction_report(text):
         "act_num": aosr["act_num"]
     }
 
+# ==============================================================================
+# 6. КОНТЕЙНЕРНАЯ АРХИТЕКТУРА ОБЪЕКТОВ (Сквозные карточки & Экспорт КС-2/Excel)
+# ==============================================================================
+
+CONSTRUCTION_OBJECTS = [
+    {
+        "id": "dubovka",
+        "name": "ДУБОВКА",
+        "title": "г. Дубовка (ул. Московская 34)",
+        "discipline": "Кровля и водоотведение",
+        "match_keys": ["дубовк", "московск", "дубовка"]
+    },
+    {
+        "id": "kotovo",
+        "name": "КОТОВО",
+        "title": "г. Котово (ул. Мира 149, Победы 8, Чапаева 1)",
+        "discipline": "Теплоснабжение и отопление",
+        "match_keys": ["котов", "мира 149", "победы 8", "чапаева", "котово"]
+    },
+    {
+        "id": "mikhaylovka",
+        "name": "МИХАЙЛОВКА",
+        "title": "г. Михайловка (ул. Некрасова 26, 1а)",
+        "discipline": "Водоснабжение и сети",
+        "match_keys": ["михайловк", "некрасова", "михайловка"]
+    },
+    {
+        "id": "krasnoslobodsk",
+        "name": "КРАСНОСЛОБОДСК",
+        "title": "г. Краснослободск (ГНБ и сети)",
+        "discipline": "ГНБ и бестраншейная прокладка",
+        "match_keys": ["краснослободск", "гнб", "дюкер"]
+    }
+]
+
+def get_construction_objects_markup():
+    buttons = []
+    for obj in CONSTRUCTION_OBJECTS:
+        buttons.append([{"text": f"{obj['name']} ({obj['discipline'].split()[0]})", "callback_data": f"obj_card_{obj['id']}"}])
+    buttons.append([{"text": "« В раздел «Работа»", "callback_data": "nav_construction"}])
+    return {"inline_keyboard": buttons}
+
+def get_object_container_data(obj_id: str) -> dict:
+    obj_meta = next((o for o in CONSTRUCTION_OBJECTS if o["id"] == obj_id), None)
+    if not obj_meta:
+        obj_meta = next((o for o in CONSTRUCTION_OBJECTS if o["name"].lower() == obj_id.lower()), {
+            "id": obj_id.lower(),
+            "name": obj_id.upper(),
+            "title": f"Объект {obj_id.upper()}",
+            "discipline": "Строительный контроль 615-ФЗ",
+            "match_keys": [obj_id.lower()]
+        })
+
+    # 1. Финансы из expenses.json
+    expenses_path = "/home/home/Документы/2/expenses.json"
+    obj_expenses = []
+    if os.path.exists(expenses_path):
+        try:
+            with open(expenses_path, "r", encoding="utf-8") as f:
+                all_exp = json.load(f)
+                for e in all_exp:
+                    exp_obj = str(e.get("object", "")).lower()
+                    desc = str(e.get("description", "")).lower()
+                    if any(k in exp_obj or k in desc for k in obj_meta["match_keys"]):
+                        obj_expenses.append(e)
+        except Exception:
+            pass
+
+    total_spent = sum(float(e.get("amount", 0)) for e in obj_expenses)
+
+    # 2. Задачи из tasks.json
+    tasks_path = "/home/home/Документы/2/tasks.json"
+    obj_tasks_pending = []
+    obj_tasks_done = []
+    if os.path.exists(tasks_path):
+        try:
+            with open(tasks_path, "r", encoding="utf-8") as f:
+                all_tasks = json.load(f)
+                for t in all_tasks:
+                    txt = str(t.get("text", "")).lower()
+                    if any(k in txt for k in obj_meta["match_keys"]):
+                        if t.get("status") in ["completed", "done"]:
+                            obj_tasks_done.append(t)
+                        elif t.get("status") != "cancelled":
+                            obj_tasks_pending.append(t)
+        except Exception:
+            pass
+
+    # 3. Заметки из notes.json
+    notes_path = "/home/home/Документы/2/notes.json"
+    obj_notes = []
+    if os.path.exists(notes_path):
+        try:
+            with open(notes_path, "r", encoding="utf-8") as f:
+                all_notes = json.load(f)
+                for n in all_notes:
+                    txt = str(n.get("text", "")).lower()
+                    if any(k in txt for k in obj_meta["match_keys"]):
+                        obj_notes.append(n)
+        except Exception:
+            pass
+
+    return {
+        "meta": obj_meta,
+        "expenses": obj_expenses,
+        "total_spent": total_spent,
+        "tasks_pending": obj_tasks_pending,
+        "tasks_done": obj_tasks_done,
+        "notes": obj_notes
+    }
+
+def get_object_container_card_text(obj_id: str) -> str:
+    data = get_object_container_data(obj_id)
+    m = data["meta"]
+    
+    lines = [
+        f"<b>ОБЪЕКТ 615-ФЗ: {m['name']}</b>",
+        f"<i>{m['title']}</i>",
+        f"• Направление: <b>{m['discipline']}</b>",
+        f"• Организация: ООО «Компания Парадигма»\n",
+        f"<b>ФИНАНСЫ И ЗАТРАТЫ:</b>",
+        f"• Всего списано: <b>{data['total_spent']:,.0f} ₽</b> (записей: {len(data['expenses'])})"
+    ]
+    
+    if data["expenses"]:
+        last_e = data["expenses"][0]
+        lines.append(f"• Последний расход: <b>{last_e.get('amount', 0):,.0f} ₽</b> ({last_e.get('description', '')[:35]})")
+    
+    lines.append(f"\n<b>ЗАДАЧИ ПО ОБЪЕКТУ:</b>")
+    if data["tasks_pending"]:
+        for t in data["tasks_pending"][:3]:
+            lines.append(f"• [•] #{t.get('id')} {t.get('text')[:45]}...")
+    else:
+        lines.append("• [✓] <i>Активных открытых задач нет (все выполнено).</i>")
+
+    lines.append(f"\n<b>ДОКУМЕНТЫ И ЗАМЕТКИ:</b>")
+    lines.append(f"• Привязано заметок и актов: <b>{len(data['notes'])} шт.</b>")
+    
+    lines.append(f"\n<i>Нажмите «Скачать ведомость», чтобы получить готовый Excel/CSV файл расходов для бухгалтерии.</i>")
+    return "\n".join(lines)
+
+def get_object_container_markup(obj_id: str):
+    return {
+        "inline_keyboard": [
+            [{"text": "Скачать ведомость (Excel/CSV)", "callback_data": f"obj_export_csv_{obj_id}"}],
+            [{"text": "« Список всех объектов", "callback_data": "const_objects_list"}, {"text": "« В «Работа»", "callback_data": "nav_construction"}]
+        ]
+    }
+
+def export_object_expenses_csv(obj_id: str) -> str:
+    data = get_object_container_data(obj_id)
+    m = data["meta"]
+    obj_name = m["name"]
+    
+    filename = f"/tmp/Ведомость_Расходов_{obj_name}_{int(time.time())}.csv"
+    
+    with open(filename, "w", encoding="utf-8-sig") as f:
+        f.write(f"ВЕДОМОСТЬ РАСХОДОВ ПО ОБЪЕКТУ: {obj_name}\n")
+        f.write(f"Организация: ООО Компания Парадигма (С. А. Романов)\n")
+        f.write(f"Дата выгрузки: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
+        f.write("№;Дата;Сумма (руб);Назначение платежа;Объект;Категория\n")
+        
+        total = 0.0
+        for i, e in enumerate(data["expenses"], 1):
+            amt = float(e.get("amount", 0))
+            total += amt
+            dt = e.get("date", "")
+            desc = str(e.get("description", "")).replace(";", ",")
+            cat = e.get("category", "Строительство")
+            f.write(f"{i};{dt};{amt:.2f};{desc};{obj_name};{cat}\n")
+            
+        f.write(f"\nИТОГО ПО ОБЪЕКТУ;;{total:.2f} руб;;;\n")
+        
+    return filename
+
 if __name__ == "__main__":
+
     sample_road = "Волгоград, ул. Ленина, закатали 300 кв.м асфальта типа Б толщиной 5 см, установили 50 шт бордюров"
     print("--- ТЕСТ: РЕМОНТ ДОРОГ ---")
     res = process_voice_or_text_construction_report(sample_road)

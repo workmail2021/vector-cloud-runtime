@@ -38,7 +38,7 @@ def acquire_single_instance_lock():
         lock_file_fd.flush()
         return lock_file_fd
     except IOError:
-        print("⚠️ [ВЕКТОР] Экземпляр бота уже активен в системе (PID lock удержан). Завершение дублирующего процесса.")
+        print("[!] [ВЕКТОР] Экземпляр бота уже активен в системе (PID lock удержан). Завершение дублирующего процесса.")
         sys.exit(0)
 
 def wait_for_network_connectivity(max_wait_seconds=60):
@@ -47,21 +47,21 @@ def wait_for_network_connectivity(max_wait_seconds=60):
     чтобы бот гарантированно подключился при загрузке системы.
     """
     start_t = time.time()
-    print("📡 [ВЕКТОР] Проверка интернет-соединения...")
+    print("[*] [ВЕКТОР] Проверка интернет-соединения...")
     while time.time() - start_t < max_wait_seconds:
         try:
             req = urllib.request.Request("https://api.telegram.org", headers={"User-Agent": "VectorBot/2.0"})
             with urllib.request.urlopen(req, timeout=5) as resp:
-                print("✅ [ВЕКТОР] Сеть активна, доступ к Telegram API подтвержден!")
+                print("[+] [ВЕКТОР] Сеть активна, доступ к Telegram API подтвержден!")
                 return True
         except Exception:
             time.sleep(2)
-    print("⚠️ [ВЕКТОР] Сеть не ответила вовремя, запуск в фоновом режиме с авто-повтором.")
+    print("[!] [ВЕКТОР] Сеть не ответила вовремя, запуск в фоновом режиме с авто-повтором.")
     return False
 
 def reminders_watchdog_loop(token):
     """ Фоновый поток 24/7: проверяет наступление времени напоминаний и шлет срочные алармы """
-    print("⏰ [ВЕКТОР] Фоновый страж напоминаний 24/7 активирован!")
+    print("[*] [ВЕКТОР] Фоновый страж напоминаний 24/7 активирован!")
     while True:
         try:
             triggered = check_and_get_triggered_reminders()
@@ -75,36 +75,36 @@ def reminders_watchdog_loop(token):
                     
                     if adv:
                         alert_text = (
-                            f"🚨 <b>ВНИМАНИЕ! ЗАБЛАГОВРЕМЕННОЕ НАПОМИНАНИЕ ({adv})!</b> ⏰\n\n"
-                            f"📌 <b>Событие:</b> <code>{task}</code>\n"
-                            f"📅 <b>Начало:</b> <b>{ev_dt}</b> (<i>через {adv.replace('за ','')}</i>)\n\n"
-                            f"💡 <i>Пора выезжать / готовиться! Выберите действие:</i>"
+                            f"<b>ВНИМАНИЕ! ЗАБЛАГОВРЕМЕННОЕ НАПОМИНАНИЕ ({adv})!</b>\n\n"
+                            f"<b>Событие:</b> <code>{task}</code>\n"
+                            f"<b>Начало:</b> <b>{ev_dt}</b> (<i>через {adv.replace('за ','')}</i>)\n\n"
+                            f"<i>Пора выезжать / готовиться! Выберите действие:</i>"
                         )
                         btn_rows = [
                             [
-                                {"text": "🔔 Напомнить в начале", "callback_data": f"remind_at_event_{r_id}"},
-                                {"text": "⏱ Отложить на 15 мин", "callback_data": f"remind_snooze_15_{r_id}"}
+                                {"text": "Напомнить в начале", "callback_data": f"remind_at_event_{r_id}"},
+                                {"text": "Отложить на 15 мин", "callback_data": f"remind_snooze_15_{r_id}"}
                             ],
                             [
-                                {"text": "✅ Выполнено", "callback_data": f"remind_done_{r_id}"},
-                                {"text": "🗑 Удалить", "callback_data": f"remind_del_{r_id}"}
+                                {"text": "Выполнено", "callback_data": f"remind_done_{r_id}"},
+                                {"text": "Удалить", "callback_data": f"remind_del_{r_id}"}
                             ]
                         ]
                     else:
                         alert_text = (
-                            f"🚨 <b>ВНИМАНИЕ! СРАБОТАЛО НАПОМИНАНИЕ!</b> ⏰\n\n"
-                            f"📌 <b>Задача:</b> <code>{task}</code>\n"
-                            f"📅 <b>Время:</b> <b>{dt}</b> (<i>прямо сейчас!</i>)\n\n"
-                            f"💡 <i>Что сделать с напоминанием?</i>"
+                            f"<b>ВНИМАНИЕ! СРАБОТАЛО НАПОМИНАНИЕ!</b>\n\n"
+                            f"<b>Задача:</b> <code>{task}</code>\n"
+                            f"<b>Время:</b> <b>{dt}</b> (<i>прямо сейчас!</i>)\n\n"
+                            f"<i>Что сделать с напоминанием?</i>"
                         )
                         btn_rows = [
                             [
-                                {"text": "⏱ Отложить на 15 мин", "callback_data": f"remind_snooze_15_{r_id}"},
-                                {"text": "⏱ Отложить на 1 час", "callback_data": f"remind_snooze_60_{r_id}"}
+                                {"text": "Отложить на 15 мин", "callback_data": f"remind_snooze_15_{r_id}"},
+                                {"text": "Отложить на 1 час", "callback_data": f"remind_snooze_60_{r_id}"}
                             ],
                             [
-                                {"text": "✅ Выполнено", "callback_data": f"remind_done_{r_id}"},
-                                {"text": "🗑 Удалить", "callback_data": f"remind_del_{r_id}"}
+                                {"text": "Выполнено", "callback_data": f"remind_done_{r_id}"},
+                                {"text": "Удалить", "callback_data": f"remind_del_{r_id}"}
                             ]
                         ]
                     markup = {"inline_keyboard": btn_rows}
@@ -119,7 +119,7 @@ def reminders_watchdog_loop(token):
                     with urllib.request.urlopen(req, timeout=10) as resp:
                         pass
                     log_info("RemindersWatchdog", "trigger", f"Напоминание #{r_id} отправлено: {r.get('text')}")
-                    print(f"⏰ [ВЕКТОР] Сработало напоминание #{r_id}: '{r.get('text')}' — аларм отправлен в Telegram!")
+                    print(f"[*] [ВЕКТОР] Сработало напоминание #{r_id}: '{r.get('text')}' — аларм отправлен в Telegram!")
         except Exception as err:
             log_error("RemindersWatchdog", "reminders_watchdog_loop", f"Ошибка проверки напоминаний: {err}", exc=err)
         time.sleep(5)
@@ -144,7 +144,7 @@ def autonomous_scheduler_247():
     - Автоматический мастер-бэкап каждые 12 часов (backup_all_project_data)
     - Авто-очистка мусора каждые 6 часов (pc_maintenance)
     """
-    print("⏳ [ВЕКТОР] Автономный планировщик регулярных задач 24/7 запущен...")
+    print("[*] [ВЕКТОР] Автономный планировщик регулярных задач 24/7 запущен...")
     last_daily_date = ""
     last_weekly_week = ""
     last_backup_time = time.time()
@@ -163,15 +163,15 @@ def autonomous_scheduler_247():
             weekday = now.tm_wday # 0 = Понедельник
             week_str = f"{now.tm_year}-W{time.strftime('%V', now)}"
 
-            # 1. Ежедневный тематический отчет (20:00)
-            if current_hour == 20 and current_min >= 0 and today_str != last_daily_date:
-                try:
-                    from daily_bot_audit import generate_daily_topic_report
-                    generate_daily_topic_report()
-                    last_daily_date = today_str
-                    log_info("AutonomousScheduler", "daily_report", f"Ежедневный отчет за {today_str} успешно сформирован и отправлен.")
-                except Exception as e:
-                    log_error("AutonomousScheduler", "daily_report", f"Ошибка отправки ежедневного отчета: {e}", exc=e)
+            # 1. Ежедневный тематический отчет (20:00) - отключен по директиве владельца
+            # if current_hour == 20 and current_min >= 0 and today_str != last_daily_date:
+            #     try:
+            #         from daily_bot_audit import generate_daily_topic_report
+            #         generate_daily_topic_report()
+            #         last_daily_date = today_str
+            #         log_info("AutonomousScheduler", "daily_report", f"Ежедневный отчет за {today_str} успешно сформирован и отправлен.")
+            #     except Exception as e:
+            #         log_error("AutonomousScheduler", "daily_report", f"Ошибка отправки ежедневного отчета: {e}", exc=e)
 
             # 2. Еженедельный тематический аудит (Понедельник, 10:00)
             if weekday == 0 and current_hour == 10 and current_min >= 0 and week_str != last_weekly_week:
@@ -238,9 +238,11 @@ def main_polling_loop():
         print("Ошибка: Токен Telegram не найден в конфигурации.")
         return
 
-    # Запуск фонового стража напоминаний
-    t = threading.Thread(target=reminders_watchdog_loop, args=(token,), daemon=True)
-    t.start()
+    # ────────────────────────────────────────────────────────────────
+    # ПРИМЕЧАНИЕ: Напоминания (reminders) обрабатываются исключительно
+    # в background_engine.py (worker_reminders) для исключения двойных
+    # уведомлений. Здесь watchdog НЕ запускается.
+    # ────────────────────────────────────────────────────────────────
 
     # Запуск фонового стража доступности ИИ-моделей (GPT-5 / Gemini)
     t_ai = threading.Thread(target=ai_model_health_watchdog_loop, daemon=True)
@@ -249,6 +251,13 @@ def main_polling_loop():
     # Запуск автономного планировщика регулярных задач 24/7
     t_sched = threading.Thread(target=autonomous_scheduler_247, daemon=True)
     t_sched.start()
+
+    # Обновление команд бота в Telegram API при каждом старте (Zero-Emoji Tier-1)
+    try:
+        setup_bot_commands()
+        print("[+] [ВЕКТОР] Команды бота обновлены в Telegram API (Zero-Emoji)")
+    except Exception as e:
+        print(f"[!] [ВЕКТОР] Ошибка обновления команд: {e}")
 
     # Пул параллельных воркеров для мгновенной обработки кликов и сообщений
     executor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="VectorWorker")
@@ -259,7 +268,7 @@ def main_polling_loop():
     poll_session.mount("https://", adapter)
     poll_session.mount("http://", adapter)
 
-    print("⚡️ [ВЕКТОР] Бот запущен на Turbo Keep-Alive движке (Параллельные воркеры активны) 24/7...")
+    print("[*] [ВЕКТОР] Бот запущен на Turbo Keep-Alive движке (Параллельные воркеры активны) 24/7...")
 
     def _worker_process_update(up):
         up_id = up.get("update_id", 0)
@@ -267,7 +276,22 @@ def main_polling_loop():
             process_single_update(up)
         except Exception as up_err:
             log_error("VectorPolling", "process_single_update", f"Ошибка обработки update_id={up_id}: {up_err}", exc=up_err)
-            send_emergency_recovery_response(up, up_err)
+            # Аварийное уведомление владельцу о сбое обработки
+            try:
+                chat_id = None
+                msg = up.get("message") or up.get("callback_query", {}).get("message")
+                if msg:
+                    chat_id = msg.get("chat", {}).get("id")
+                if chat_id:
+                    err_text = f"[!] <b>Сбой обработки запроса:</b>\n<code>{html.escape(str(up_err)[:500])}</code>\n\n<i>Повторите попытку или вернитесь в главное меню.</i>"
+                    import urllib.request as _ur
+                    _ur.urlopen(_ur.Request(
+                        f"https://api.telegram.org/bot{token}/sendMessage",
+                        data=json.dumps({"chat_id": chat_id, "text": err_text, "parse_mode": "HTML"}).encode("utf-8"),
+                        headers={"Content-Type": "application/json"}
+                    ), timeout=5)
+            except Exception:
+                pass  # Не даём аварийному уведомлению уронить воркер
 
     while True:
         try:

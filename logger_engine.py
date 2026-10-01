@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🛰 ЕДИНЫЙ БОРТОВОЙ ЖУРНАЛ И СИСТЕМА ЛОГИРОВАНИЯ ИИ-ВЕКТОР (FLIGHT LOG ENGINE)
+ЕДИНЫЙ БОРТОВОЙ ЖУРНАЛ И СИСТЕМА ЛОГИРОВАНИЯ ИИ-ВЕКТОР (FLIGHT LOG ENGINE)
 Создан по прямому указанию Сергея Романова.
 Обеспечивает точную локализацию сбоев, запись таймстемпов, функций, стеков вызовов
 и автоматический доступ LLM к ошибкам для самоотладки без догадок.
@@ -41,7 +41,7 @@ if not logger.handlers:
     fh_err = RotatingFileHandler(ERROR_LOG_PATH, maxBytes=5*1024*1024, backupCount=3, encoding="utf-8")
     fh_err.setLevel(logging.ERROR)
     fmt_err = logging.Formatter(
-        "[%(asctime)s] [🛑 ERROR] [%(filename)s:%(funcName)s:%(lineno)d]\nMessage: %(message)s\n" + "-"*60,
+        "[%(asctime)s] [ERROR] [%(filename)s:%(funcName)s:%(lineno)d]\nMessage: %(message)s\n" + "-"*60,
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     fh_err.setFormatter(fmt_err)
@@ -68,7 +68,7 @@ def log_error(module_name, func_name, error_msg, exc=None):
     
     full_log = f"[{module_name} -> {func_name}] {error_msg}{tb_str}"
     logger.error(full_log)
-    print(f"🛑 [БОРТОВОЙ ЖУРНАЛ: ОШИБКА] {full_log}", file=sys.stderr)
+    print(f"[ERROR] [БОРТОВОЙ ЖУРНАЛ: ОШИБКА] {full_log}", file=sys.stderr)
 
 def get_recent_errors(limit=10):
     """Возвращает последние зафиксированные ошибки для автономного дебага LLM."""
@@ -101,5 +101,5 @@ def get_flight_summary():
 
 if __name__ == "__main__":
     log_info("FlightLog", "main", "Бортовой журнал успешно инициализирован.")
-    print("🛰 Сводка бортового журнала:")
+    print("Сводка бортового журнала:")
     print(json.dumps(get_flight_summary(), ensure_ascii=False, indent=2))

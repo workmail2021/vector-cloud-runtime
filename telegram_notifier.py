@@ -28,13 +28,13 @@ def send_telegram_message(message_text, token=None, chat_id=None):
         return False
 
     if int(target_chat_id) != AUTHORIZED_CHAT_ID:
-        print(f"🔒 [БЕЗОПАСНОСТЬ ВЕКТОРА] Попытка отправки на неавторизованный ID {target_chat_id} заблокирована!")
+        print(f"[ЗАБЛОКИРОВАНО] [БЕЗОПАСНОСТЬ ВЕКТОРА] Попытка отправки на неавторизованный ID {target_chat_id}!")
         return False
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         "chat_id": target_chat_id,
-        "text": f"🎯 <b>ВЕКТОР (Ваш ИИ-Ассистент):</b>\n\n{message_text}",
+        "text": f"<b>ВЕКТОР (Ваш ИИ-Ассистент):</b>\n\n{message_text}",
         "parse_mode": "HTML"
     }
 
