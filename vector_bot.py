@@ -182,6 +182,7 @@ from reminders_module import (
     get_reminder_detail_markup,
     add_reminder,
     snooze_reminder,
+    snooze_reminder_tomorrow,
     set_reminder_to_event_time,
     complete_reminder,
     delete_reminder,
@@ -1497,7 +1498,17 @@ def handle_callback(cb):
             n_id = save_note(pending["text"], note_type=pending.get("type", "текст"), category=cat_chosen)
             answer_cb_async(cb_id, text=f"Сохранено в [{cat_chosen}]!")
             NOTES_CATEGORY_STATE[chat_id] = cat_chosen
-            edit_card(chat_id, msg_id, get_notes_text(chat_id), get_notes_markup(chat_id))
+            confirm_txt = (
+                f"<b>ЗАМЕТКА #{n_id} СОХРАНЕНА В [{cat_chosen.upper()}]!</b>\n\n"
+                f"<code>{html.escape(pending['text'])}</code>"
+            )
+            btn_mk = {
+                "inline_keyboard": [
+                    [{"text": "Сделать задачей", "callback_data": f"note_to_task_{n_id}"}],
+                    [{"text": "« К заметкам", "callback_data": "nav_notes"}, {"text": "« В Меню", "callback_data": "nav_main"}]
+                ]
+            }
+            edit_card(chat_id, msg_id, confirm_txt, btn_mk)
         else:
             answer_cb_async(cb_id, text="[!] Запись уже обработана")
             NOTES_CATEGORY_STATE[chat_id] = "overview"
@@ -1534,6 +1545,28 @@ def handle_callback(cb):
             edit_card(chat_id, msg_id, get_note_detail_text(updated_n), get_note_detail_markup(updated_n))
         else:
             edit_card(chat_id, msg_id, get_notes_text(chat_id), get_notes_markup(chat_id))
+    elif cb_data.startswith("note_to_task_"):
+        n_id = int(cb_data.replace("note_to_task_", ""))
+        note = get_note_by_id(n_id)
+        if note:
+            t_text = note.get("text", "")
+            t_cat = note.get("category", "Общее")
+            new_t = add_task(t_text, category=t_cat, priority="medium")
+            rep_txt = (
+                f"<b>ЗАДАЧА #{new_t['id']} СОЗДАНА ИЗ ЗАМЕТКИ #{n_id}!</b>\n\n"
+                f"• Текст: <code>{html.escape(t_text)}</code>\n"
+                f"• Категория: <b>[{t_cat}]</b>\n\n"
+                f"<i>Задача зафиксирована в трекере и включена в брифинг.</i>"
+            )
+            edit_card(chat_id, msg_id, rep_txt, {
+                "inline_keyboard": [
+                    [{"text": "К задачам", "callback_data": "nav_tasks"}, {"text": "« К заметкам", "callback_data": "nav_notes"}],
+                    [{"text": "« В Главное Меню", "callback_data": "nav_main"}]
+                ]
+            })
+            answer_cb_async(cb_id, text=f"Создана задача #{new_t['id']}!")
+        else:
+            answer_cb_async(cb_id, text="[!] Заметка не найдена")
     elif cb_data.startswith("note_detail_"):
         n_id = int(cb_data.replace("note_detail_", ""))
         note = get_note_by_id(n_id)
@@ -2041,6 +2074,13 @@ def handle_callback(cb):
         r = snooze_reminder(r_id, 60)
         if r:
             edit_card(chat_id, msg_id, f"<b>Напоминание #{r_id} отложено на 1 час!</b>\n\nЗадача: <code>{html.escape(r.get('text',''))}</code>\nНовое время: <b>{r.get('target_datetime','')}</b>", get_reminder_detail_markup(r_id))
+        else:
+            edit_card(chat_id, msg_id, get_reminders_dashboard_text(), get_reminders_dashboard_markup())
+    elif cb_data.startswith("remind_snooze_tomorrow_"):
+        r_id = int(cb_data.replace("remind_snooze_tomorrow_", ""))
+        r = snooze_reminder_tomorrow(r_id, 9)
+        if r:
+            edit_card(chat_id, msg_id, f"<b>Напоминание #{r_id} перенесено на завтра!</b>\n\nЗадача: <code>{html.escape(r.get('text',''))}</code>\nНовое время: <b>{r.get('target_datetime','')}</b> (09:00 MSK)\n\n<i>Оно включено в утренний брифинг.</i>", get_reminder_detail_markup(r_id))
         else:
             edit_card(chat_id, msg_id, get_reminders_dashboard_text(), get_reminders_dashboard_markup())
     elif cb_data.startswith("remind_at_event_"):
@@ -2823,11 +2863,17 @@ def process_command_text(sender_chat_id, text, is_voice=False, voice_file=None, 
             f"<code>{html.escape(text)}</code>\n\n"
             f"<i>Номер записи: #{n_id}</i>"
         )
+        note_markup = {
+            "inline_keyboard": [
+                [{"text": "Сделать задачей", "callback_data": f"note_to_task_{n_id}"}],
+                [{"text": "« К заметкам", "callback_data": "nav_notes"}, {"text": "« В Меню", "callback_data": "nav_main"}]
+            ]
+        }
         send_api_request("sendMessage", {
             "chat_id": sender_chat_id,
             "text": confirm_text,
             "parse_mode": "HTML",
-            "reply_markup": get_notes_markup(sender_chat_id)
+            "reply_markup": note_markup
         })
         return
 
@@ -3191,7 +3237,13 @@ def process_command_text(sender_chat_id, text, is_voice=False, voice_file=None, 
                 f"<i>Файл сохранен на диске: База_Заметок/{CATEGORY_DIR_MAP[target_cat].split('/')[-1]}/</i>"
             )
             NOTES_CATEGORY_STATE[sender_chat_id] = target_cat
-            send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": confirm_text, "parse_mode": "HTML", "reply_markup": get_notes_markup(sender_chat_id)})
+            note_markup = {
+                "inline_keyboard": [
+                    [{"text": "Сделать задачей", "callback_data": f"note_to_task_{note_id}"}],
+                    [{"text": "« К заметкам", "callback_data": "nav_notes"}, {"text": "« В Главное Меню", "callback_data": "nav_main"}]
+                ]
+            }
+            send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": confirm_text, "parse_mode": "HTML", "reply_markup": note_markup})
             return
         else:
             PENDING_NOTE_CATEGORY[sender_chat_id] = {

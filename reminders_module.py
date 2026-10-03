@@ -300,6 +300,21 @@ def snooze_reminder(remind_id, minutes=15):
             return r
     return None
 
+def snooze_reminder_tomorrow(remind_id, hour=9):
+    """ Откладывает напоминание на завтра утро (09:00) """
+    reminders = load_reminders()
+    for r in reminders:
+        if r.get("id") == remind_id:
+            now = datetime.datetime.now()
+            tomorrow_dt = (now + datetime.timedelta(days=1)).replace(hour=hour, minute=0, second=0, microsecond=0)
+            r["target_datetime"] = tomorrow_dt.strftime("%Y-%m-%d %H:%M:%S")
+            r["target_timestamp"] = tomorrow_dt.timestamp()
+            r["status"] = "pending"
+            r["snooze_count"] = r.get("snooze_count", 0) + 1
+            save_reminders(reminders)
+            return r
+    return None
+
 def set_reminder_to_event_time(remind_id):
     """ Переводит напоминание на точный момент начала события """
     reminders = load_reminders()

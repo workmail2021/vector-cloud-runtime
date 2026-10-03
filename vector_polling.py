@@ -82,12 +82,12 @@ def reminders_watchdog_loop(token):
                         )
                         btn_rows = [
                             [
-                                {"text": "Напомнить в начале", "callback_data": f"remind_at_event_{r_id}"},
-                                {"text": "Отложить на 15 мин", "callback_data": f"remind_snooze_15_{r_id}"}
+                                {"text": "Выполнено", "callback_data": f"remind_done_{r_id}"},
+                                {"text": "Напомнить в начале", "callback_data": f"remind_at_event_{r_id}"}
                             ],
                             [
-                                {"text": "Выполнено", "callback_data": f"remind_done_{r_id}"},
-                                {"text": "Удалить", "callback_data": f"remind_del_{r_id}"}
+                                {"text": "Отложить на 1 час", "callback_data": f"remind_snooze_60_{r_id}"},
+                                {"text": "На завтра утро", "callback_data": f"remind_snooze_tomorrow_{r_id}"}
                             ]
                         ]
                     else:
@@ -99,11 +99,11 @@ def reminders_watchdog_loop(token):
                         )
                         btn_rows = [
                             [
-                                {"text": "Отложить на 15 мин", "callback_data": f"remind_snooze_15_{r_id}"},
+                                {"text": "Выполнено", "callback_data": f"remind_done_{r_id}"},
                                 {"text": "Отложить на 1 час", "callback_data": f"remind_snooze_60_{r_id}"}
                             ],
                             [
-                                {"text": "Выполнено", "callback_data": f"remind_done_{r_id}"},
+                                {"text": "На завтра утро (09:00)", "callback_data": f"remind_snooze_tomorrow_{r_id}"},
                                 {"text": "Удалить", "callback_data": f"remind_del_{r_id}"}
                             ]
                         ]
