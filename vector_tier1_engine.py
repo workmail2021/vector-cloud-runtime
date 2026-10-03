@@ -586,8 +586,7 @@ def get_object_budget_hud(obj_name: str):
 def get_morning_briefing_card(user_name="Сергей"):
     """
     Формирует единый утренний дайджест руководителя (Morning Executive Briefing):
-    • Погода на ключевых объектах (Волгоград, Котово, Михайловка)
-    • Boxing Lab: готовность атлетов и допуск к тренировкам (athletes_db.json)
+    • Погода (Волгоград)
     • Почасовой график и напоминания на сегодня (reminders.json)
     • Оперативные задачи с дедлайнами и прогресс-баром (tasks.json)
     • Ночные события и службы: отзывы Яндекс.Карт ЦСЕ + Почта Mail.ru + статус системы
@@ -605,8 +604,7 @@ def get_morning_briefing_card(user_name="Сергей"):
     today_str = today_dt.strftime("%d.%m.%Y")
     today_iso = today_dt.strftime("%Y-%m-%d")
     
-    # 1. Погода на объектах (Волгоград, Котово, Михайловка)
-    cities = [("Волгоград", "Volgograd"), ("Котово", "Kotovo"), ("Михайловка", "Mikhailovka")]
+    # 1. Погода (Волгоград)
     weather_trans = {
         "clear": "ясно", "sunny": "ясно, солнечно", "partly cloudy": "переменная облачность",
         "cloudy": "облачно", "overcast": "пасмурно", "mist": "туман", "fog": "туман",
@@ -615,57 +613,23 @@ def get_morning_briefing_card(user_name="Сергей"):
     }
     w_lines = []
     import urllib.request
-    for ru, en in cities:
-        try:
-            req = urllib.request.Request(f"https://wttr.in/{en}?format=j1", headers={"User-Agent": "curl/7.68.0"})
-            with urllib.request.urlopen(req, timeout=3) as r:
-                d = json.loads(r.read().decode("utf-8"))
-                curr = d["current_condition"][0]
-                temp = curr.get("temp_C", "--")
-                raw_desc = curr.get("weatherDesc", [{}])[0].get("value", "").strip()
-                desc = curr.get("lang_ru", [{}])[0].get("value", "") if "lang_ru" in curr else ""
-                if not desc:
-                    desc = weather_trans.get(raw_desc.lower(), raw_desc.lower())
-                else:
-                    desc = desc.strip().lower()
-                w_lines.append(f"• <b>{ru}:</b> <b>{temp}°C</b> ({desc})")
-        except Exception:
-            w_lines.append(f"• <b>{ru}:</b> <b>+18°C</b> (комфортно)")
-
-    # 2. Boxing Performance Lab readiness (athletes_db.json)
-    box_paths = [
-        os.path.expanduser("~/projects/boxing-sc-lab/data/athletes_db.json"),
-        os.path.join(PROJECT_ROOT, "Спорт", "Разработка", "Boxing_SC_Lab", "data", "athletes_db.json"),
-        os.path.join(PROJECT_ROOT, "data_backup", "athletes_db.json")
-    ]
-    box_db_file = next((p for p in box_paths if os.path.exists(p)), None)
-    boxing_lines = []
-    if box_db_file:
-        try:
-            with open(box_db_file, "r", encoding="utf-8") as f:
-                b_data = json.load(f)
-            athletes = b_data.get("athletes", {})
-            sr = athletes.get("6375883079")
-            if sr:
-                hist = sr.get("history", [])
-                latest = hist[-1] if hist else {}
-                sc = latest.get("score", 0)
-                zn = latest.get("zone", "GREEN")
-                z_icon = f"[{zn}]"
-                bpm = latest.get("metrics", {}).get("bpm", "--")
-                rmssd = latest.get("metrics", {}).get("rmssd", "--")
-                shtange = latest.get("metrics", {}).get("shtange") or sr.get("baselines", {}).get("shtange_baseline", "--")
-                boxing_lines.append(f"• <b>Сергей Романов:</b> <b>{sc:.0f}%</b> {z_icon} (Зона: <b>{zn}</b>)")
-                boxing_lines.append(f"  <i>ЧСС: {bpm} уд/м | rMSSD: {rmssd} мс | Штанге: {shtange} с</i>")
-                boxing_lines.append(f"• <b>Допуск к спаррингам:</b> <b>100% нагрузка</b> (в кэмпе: {len(athletes)} атлет)")
+    try:
+        req = urllib.request.Request("https://wttr.in/Volgograd?format=j1", headers={"User-Agent": "curl/7.68.0"})
+        with urllib.request.urlopen(req, timeout=3) as r:
+            d = json.loads(r.read().decode("utf-8"))
+            curr = d["current_condition"][0]
+            temp = curr.get("temp_C", "--")
+            raw_desc = curr.get("weatherDesc", [{}])[0].get("value", "").strip()
+            desc = curr.get("lang_ru", [{}])[0].get("value", "") if "lang_ru" in curr else ""
+            if not desc:
+                desc = weather_trans.get(raw_desc.lower(), raw_desc.lower())
             else:
-                boxing_lines.append(f"• Атлетов в кэмпе: <b>{len(athletes)}</b> | Boxing Lab 24/7 активен")
-        except Exception as e:
-            boxing_lines.append("• Boxing Lab: @Performance555_bot готов к замерам")
-    else:
-        boxing_lines.append("• Boxing Lab: @Performance555_bot готов к замерам")
+                desc = desc.strip().lower()
+            w_lines.append(f"• <b>Волгоград:</b> <b>{temp}°C</b> ({desc})")
+    except Exception:
+        w_lines.append("• <b>Волгоград:</b> <b>+18°C</b> (комфортно)")
 
-    # 3. Почасовой график и напоминания на сегодня (reminders_module)
+    # 2. Почасовой график и напоминания на сегодня (reminders_module)
     today_reminders_lines = []
     try:
         from reminders_module import load_reminders
@@ -686,14 +650,14 @@ def get_morning_briefing_card(user_name="Сергей"):
     except Exception:
         today_reminders_lines.append("• <i>Расписание в штатном режиме</i>")
 
-    # 4. Задачи и прогресс
+    # 3. Задачи и прогресс
     tot_tasks = len(active_tasks)
     done_count = len(done_tasks)
     pct = round((done_count / tot_tasks * 100)) if tot_tasks > 0 else 0
     bar = "█" * (pct // 10) + "░" * (10 - pct // 10)
     tasks_bar_line = f"<b>Прогресс:</b> <code>[{bar}] {pct}%</code> ({done_count}/{tot_tasks} выполнено)"
 
-    # 5. Ночные события: Яндекс.Карты + Почта Mail.ru + Службы
+    # 4. Ночные события: Яндекс.Карты + Почта Mail.ru + Службы
     night_events_lines = []
     try:
         from yandex_maps_guard import load_reviews_db
@@ -728,13 +692,9 @@ def get_morning_briefing_card(user_name="Сергей"):
         f"<b>УТРЕННИЙ БРИФИНГ РУКОВОДИТЕЛЯ</b>",
         f"<i>{day_name}, {today_str} // 08:00 MSK</i>",
         f"Доброе утро, <b>{user_name}</b>!\n",
-        f"<b>ПОГОДА НА ОБЪЕКТАХ:</b>"
+        f"<b>ПОГОДА (ВОЛГОГРАД):</b>"
     ]
     lines.extend(w_lines)
-    lines.append("")
-
-    lines.append("<b>BOXING LAB // ГОТОВНОСТЬ АТЛЕТОВ:</b>")
-    lines.extend(boxing_lines)
     lines.append("")
 
     lines.append("<b>ПОЧАСОВОЙ ГРАФИК И НАПОМИНАНИЯ (СЕГОДНЯ):</b>")
@@ -761,11 +721,10 @@ def get_morning_briefing_card(user_name="Сергей"):
                 {"text": "Напоминания", "callback_data": "nav_reminders"}
             ],
             [
-                {"text": "Boxing Lab", "url": "https://t.me/Performance555_bot"},
-                {"text": "Почта", "callback_data": "nav_mail"}
+                {"text": "Почта", "callback_data": "nav_mail"},
+                {"text": "Обновить брифинг", "callback_data": "action_refresh_briefing"}
             ],
             [
-                {"text": "Обновить брифинг", "callback_data": "action_refresh_briefing"},
                 {"text": "« В Главное Меню", "callback_data": "nav_main"}
             ]
         ]
@@ -778,7 +737,7 @@ def get_evening_briefing_card(user_name="Сергей"):
     • Итоги выполнения задач за день (точный список закрытых задач)
     • Задачи, переходящие на завтра
     • Финансы и расходы за сегодня
-    • Восстановительный протокол и фарм-контроль Boxing Lab
+    • Статус системы и планирование на завтра
     """
     now = datetime.datetime.now()
     today_str = now.strftime("%Y-%m-%d")
@@ -848,13 +807,6 @@ def get_evening_briefing_card(user_name="Сергей"):
             lines.append(f"  - <i>{e.get('object', 'Общее')}: {e.get('amount', 0):,.0f} ₽ ({html.escape(e.get('description', ''))[:30]})</i>")
     else:
         lines.append("• Новых расходов за сегодня не вносилось")
-    lines.append("")
-
-    lines.append("<b>BOXING LAB // ВЕЧЕРНИЙ ПРОТОКОЛ:</b>")
-    lines.append("• <b>Фармакоррекция (сон):</b> Ашваганда + Хелатный магний (за 30-40 мин до сна)")
-    lines.append("• <b>Режим восстановления:</b> Сон не менее 8 часов для нормализации rMSSD к утреннему замеру")
-    lines.append("")
-
     lines.append("<b>СИСТЕМА:</b> Все сервисы 24/7 работают штатно.")
 
     markup = {
