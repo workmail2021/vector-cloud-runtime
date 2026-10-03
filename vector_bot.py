@@ -257,6 +257,7 @@ QUICK_TARGET_CATEGORY = {}  # chat_id -> "Спорт" | "Работа" | "Общ
 PENDING_SEARCH_IN_CAT = {}  # chat_id -> "Спорт" | "Работа" | "Общее"
 FOLDER_SEARCH_RESULTS = {}  # chat_id -> "search query string"
 PENDING_GLOBAL_SEARCH = {}  # chat_id -> bool
+PENDING_TOMORROW_PLAN = {}   # chat_id -> bool
 
 # ═══════════════════════════════════════════════════════════════════
 # Потокобезопасное хранилище состояний (для постепенной миграции)
@@ -2250,10 +2251,25 @@ def handle_callback(cb):
         br_text, br_mk = get_morning_briefing_card(user_name="Сергей")
         edit_card(chat_id, msg_id, br_text, br_mk)
         answer_cb_async(cb_id, text="Брифинг обновлен свежими данными!")
-    elif cb_data == "nav_evening_briefing":
+    elif cb_data in ["nav_evening_briefing", "nav_evening", "action_refresh_evening"]:
         ev_text, ev_mk = get_evening_briefing_card(user_name="Сергей")
         edit_card(chat_id, msg_id, ev_text, ev_mk)
-        answer_cb_async(cb_id, text="Вечерний дайджест загружен!")
+        answer_cb_async(cb_id, text="Вечерний отчет обновлен!")
+    elif cb_data == "evening_plan_tomorrow":
+        PENDING_TOMORROW_PLAN[chat_id] = True
+        prompt_txt = (
+            "<b>ПЛАНИРОВАНИЕ ЗАДАЧ НА ЗАВТРА</b>\n\n"
+            "Надиктуйте голосовое сообщение или отправьте текст с планами на завтра.\n\n"
+            "<i>Пример: «1. В 10:00 спарринги в зале ЦСЕ. 2. Сверить накопительную ведомость. 3. Проверить почту.»</i>\n\n"
+            "ИИ-Вектор автоматически распределит их по направлениям (Спорт, Работа, Общее), установит приоритеты и включит в утренний брифинг."
+        )
+        back_mk = {
+            "inline_keyboard": [
+                [{"text": "« Отмена / Назад", "callback_data": "nav_evening"}]
+            ]
+        }
+        edit_card(chat_id, msg_id, prompt_txt, back_mk)
+        answer_cb_async(cb_id, text="Режим планирования на завтра активен")
     elif cb_data == "nav_security":
         edit_card(chat_id, msg_id, get_cyber_security_dashboard_text(), get_cyber_security_markup())
     elif cb_data == "sec_run_audit":
@@ -2598,6 +2614,53 @@ def process_command_text(sender_chat_id, text, is_voice=False, voice_file=None, 
         })
         return
 
+    # 0.01a2 ПЛАНИРОВАНИЕ ЗАДАЧ НА ЗАВТРА (ГОЛОС ИЛИ ТЕКСТ ИЗ ВЕЧЕРНЕГО ОТЧЕТА)
+    if sender_chat_id in PENDING_TOMORROW_PLAN and not text.startswith("/"):
+        PENDING_TOMORROW_PLAN.pop(sender_chat_id, None)
+        raw_body = text.strip()
+        task_lines = [re.sub(r'^\s*(?:\d+[\.\)]|[-•*]|задача\s*\d*:?)\s*', '', line).strip() for line in raw_body.split('\n') if len(line.strip()) > 2]
+        if not task_lines:
+            task_lines = [raw_body]
+
+        tomorrow_dt = datetime.datetime.now() + datetime.timedelta(days=1)
+        tomorrow_iso = tomorrow_dt.strftime("%Y-%m-%d")
+
+        added_tasks = []
+        for t_line in task_lines:
+            cat = "Работа" if any(w in t_line.lower() for w in ["615", "котово", "дубовка", "михайловка", "акт", "смета", "прораб", "объект", "кровл", "фасад"]) else ("Спорт" if any(w in t_line.lower() for w in ["бокс", "трен", "пульс", "кэмп", "спарринг", "штанге"]) else "Общее")
+            pri = "high" if any(w in t_line.lower() for w in ["срочно", "горит", "важно", "главное", "утром"]) else "medium"
+            nt = add_task(t_line, category=cat, priority=pri, deadline=tomorrow_iso)
+            added_tasks.append(nt)
+
+        if len(added_tasks) == 1:
+            nt = added_tasks[0]
+            confirm_msg = (
+                f"<b>Задача на завтра добавлена в трекер!</b>\n\n"
+                f"• Текст: <code>{html.escape(nt['text'])}</code>\n"
+                f"• Категория: <b>[{nt['category']}]</b> | Приоритет: <b>{'Высокий' if nt['priority'] == 'high' else 'Обычный'}</b>\n\n"
+                f"<i>Она включена в утренний брифинг.</i>"
+            )
+        else:
+            t_list_str = "\n".join([f"• #{t['id']} {html.escape(t['text'])} <i>[{t['category']}]</i>" for t in added_tasks])
+            confirm_msg = (
+                f"<b>Добавлено задач на завтра: {len(added_tasks)} шт!</b>\n\n"
+                f"{t_list_str}\n\n"
+                f"<i>Они включены в утренний брифинг.</i>"
+            )
+
+        send_api_request("sendMessage", {
+            "chat_id": sender_chat_id,
+            "text": confirm_msg,
+            "parse_mode": "HTML",
+            "reply_markup": {
+                "inline_keyboard": [
+                    [{"text": "« К Вечернему отчету", "callback_data": "nav_evening"}],
+                    [{"text": "« В Главное Меню", "callback_data": "nav_main"}]
+                ]
+            }
+        })
+        return
+
     # 0.01b РЕЖИМ ГЛОБАЛЬНОГО ПОИСКА (по клику на кнопку в меню или команде)
     if (sender_chat_id in PENDING_GLOBAL_SEARCH and not text.startswith("/")) or text_lower.startswith(("/search", "/найти", "/find", "поиск ", "найди ")):
         PENDING_GLOBAL_SEARCH.pop(sender_chat_id, None)
@@ -2820,29 +2883,21 @@ def process_command_text(sender_chat_id, text, is_voice=False, voice_file=None, 
         send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_construction_dashboard_text(), "parse_mode": "HTML", "reply_markup": get_construction_markup()})
         return
     elif text_lower in ["/briefing", "/брифинг", "брифинг", "сводка дня", "план дня"]:
+        b_text, b_markup = get_morning_briefing_card(user_name="Сергей")
         send_api_request("sendMessage", {
             "chat_id": sender_chat_id,
-            "text": generate_morning_briefing_text(),
+            "text": b_text,
             "parse_mode": "HTML",
-            "reply_markup": {
-                "inline_keyboard": [
-                    [{"text": "К задачам дня", "callback_data": "nav_tasks"}, {"text": "К объектам 615-ФЗ", "callback_data": "const_objects_list"}],
-                    [{"text": "« В Главное Меню", "callback_data": "nav_main"}]
-                ]
-            }
+            "reply_markup": b_markup
         })
         return
     elif text_lower in ["/evening", "/вечер", "вечер", "вечерний итог", "итоги дня", "итог дня", "вечерний отчет"]:
+        ev_text, ev_markup = get_evening_briefing_card(user_name="Сергей")
         send_api_request("sendMessage", {
             "chat_id": sender_chat_id,
-            "text": generate_evening_summary_text(),
+            "text": ev_text,
             "parse_mode": "HTML",
-            "reply_markup": {
-                "inline_keyboard": [
-                    [{"text": "К задачам", "callback_data": "nav_tasks"}, {"text": "Заметки", "callback_data": "nav_notes"}],
-                    [{"text": "« В Главное Меню", "callback_data": "nav_main"}]
-                ]
-            }
+            "reply_markup": ev_markup
         })
         return
     elif text_lower in ["/objects", "/объекты", "объекты", "список объектов"]:
