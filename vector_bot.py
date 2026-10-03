@@ -1265,12 +1265,15 @@ def get_expenses_text():
         return (
             "<b>ТРЕКЕР РАСХОДОВ И ФИНАНСОВ</b>\n\n"
             "Расходов пока не зафиксировано.\n\n"
-            "<i>Отправьте текст или голосом: <code>1500 обед</code></i>"
+            "<i>Отправьте текст или надиктуйте голосом: <code>1500 обед</code></i>"
         )
-    total = sum(e["amount"] for e in expenses)
-    text = f"<b>ВАШИ РАСХОДЫ (Всего: {total} руб):</b>\n\n"
+    total = sum(e.get("amount", 0) for e in expenses)
+    text = f"<b>ВАШИ РАСХОДЫ (Всего: {total:,.0f} руб):</b>\n\n"
     for e in expenses[-10:]:
-        text += f" • <b>{e['amount']} руб</b> — {e['category']} ({e['time']})\n"
+        amt = e.get("amount", 0)
+        cat = e.get("category", e.get("description", "Общее"))
+        dt = e.get("date", e.get("time", ""))
+        text += f" • <b>{amt:,.0f} руб</b> — {cat} ({dt})\n"
     text += "\n<i>Отправьте '1500 обед', чтобы добавить расход.</i>"
     return text
 
@@ -2348,9 +2351,19 @@ def setup_bot_commands():
         {"command": "secretary", "description": "ИИ-Секретарь"},
         {"command": "tasks", "description": "Задачи"},
         {"command": "notes", "description": "Заметки"},
-        {"command": "passwords", "description": "Пароли"},
         {"command": "reminders", "description": "Напоминания"},
-        {"command": "mail", "description": "Почта"}
+        {"command": "passwords", "description": "Пароли Vault"},
+        {"command": "mail", "description": "Почта"},
+        {"command": "work", "description": "Стройконтроль 615-ФЗ"},
+        {"command": "objects", "description": "Объекты капремонта"},
+        {"command": "briefing", "description": "Утренний брифинг"},
+        {"command": "evening", "description": "Вечерний отчет"},
+        {"command": "digest", "description": "Аудио-дайджест"},
+        {"command": "expenses", "description": "Учет расходов"},
+        {"command": "reviews", "description": "Отзывы Яндекс.Карт"},
+        {"command": "security", "description": "Кибер-Щит 24/7"},
+        {"command": "pc", "description": "Управление ПК Linux"},
+        {"command": "backup", "description": "Создать резервную копию"}
     ]
     # Регистрация во всех скоупах и языках для гарантированного сброса кэша Telegram
     for scope_type in ["default", "all_private_chats"]:
