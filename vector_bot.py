@@ -2354,8 +2354,6 @@ def setup_bot_commands():
         {"command": "reminders", "description": "Напоминания"},
         {"command": "passwords", "description": "Пароли Vault"},
         {"command": "mail", "description": "Почта"},
-        {"command": "work", "description": "Стройконтроль 615-ФЗ"},
-        {"command": "objects", "description": "Объекты капремонта"},
         {"command": "briefing", "description": "Утренний брифинг"},
         {"command": "evening", "description": "Вечерний отчет"},
         {"command": "digest", "description": "Аудио-дайджест"},
