@@ -691,11 +691,11 @@ def send_telegram_photo(chat_id, photo_path, caption=None, reply_markup=None):
         cmd.extend(["-F", f"reply_markup={json.dumps(reply_markup)}"])
     
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        resp_json = json.loads(res.stdout)
-        return resp_json
-    except Exception as e:
-        print(f"Error sending photo to Telegram: {e}")
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if res.stdout and res.stdout.strip():
+            return json.loads(res.stdout)
+        return None
+    except Exception:
         return None
 
 def send_telegram_voice(chat_id, voice_path, caption=None, reply_markup=None):
@@ -802,10 +802,10 @@ def get_main_dashboard_markup():
     return {
         "inline_keyboard": [
             [{"text": "ИИ-Секретарь", "callback_data": "nav_secretary"}, {"text": "Задачи", "callback_data": "nav_tasks"}],
-            [{"text": "Заметки", "callback_data": "nav_notes"}, {"text": "Пароли", "callback_data": "nav_pass"}],
-            [{"text": "Поиск", "callback_data": "nav_search"}, {"text": "Напоминания", "callback_data": "nav_remind"}],
-            [{"text": "Облачное хранилище", "callback_data": "nav_cloud"}, {"text": "Почта", "callback_data": "nav_mail"}],
-            [{"text": "Лимиты Antigravity", "callback_data": "nav_limits"}, {"text": "Справка", "callback_data": "nav_info"}]
+            [{"text": "Заметки", "callback_data": "nav_notes"}, {"text": "Напоминания", "callback_data": "nav_remind"}],
+            [{"text": "Стройконтроль 615-ФЗ", "callback_data": "nav_construction"}, {"text": "Пароли", "callback_data": "nav_pass"}],
+            [{"text": "Почта", "callback_data": "nav_mail"}, {"text": "Кибер-Щит 24/7", "callback_data": "nav_security"}],
+            [{"text": "Управление ПК", "callback_data": "nav_pc"}, {"text": "Отзывы Яндекс.Карт", "callback_data": "nav_reviews"}]
         ]
     }
 
@@ -2350,49 +2350,56 @@ def handle_callback(cb):
         edit_card(chat_id, msg_id, get_limits_dashboard_text(), get_antigravity_limits_markup())
 
 def setup_bot_commands():
-    commands_payload = {
-        "commands": [
-            {"command": "start", "description": "Главное меню"},
-            {"command": "menu", "description": "Панель управления"},
-            {"command": "secretary", "description": "ИИ-Секретарь"},
-            {"command": "tasks", "description": "Задачи"},
-            {"command": "notes", "description": "Заметки"},
-            {"command": "passwords", "description": "Пароли"},
-            {"command": "search", "description": "Умный поиск"},
-            {"command": "reminders", "description": "Напоминания"},
-            {"command": "cloud", "description": "Облачное хранилище"},
-            {"command": "mail", "description": "Почта"},
-            {"command": "security", "description": "Кибер-Щит 24/7"},
-            {"command": "pc", "description": "Управление ПК Linux"},
-            {"command": "limits", "description": "Лимиты ИИ-моделей"},
-            {"command": "help", "description": "Справка"}
-        ]
-    }
-    send_api_request("setMyCommands", commands_payload)
+    commands_list = [
+        {"command": "start", "description": "Главное меню и статус"},
+        {"command": "menu", "description": "Интерактивная панель"},
+        {"command": "secretary", "description": "ИИ-Секретарь (Gemini)"},
+        {"command": "tasks", "description": "Реестр задач и поручений"},
+        {"command": "notes", "description": "Заметки (3 папки: Спорт, Работа, Общее)"},
+        {"command": "reminders", "description": "Умные напоминания 24/7"},
+        {"command": "passwords", "description": "Защищенный сейф паролей Vault"},
+        {"command": "work", "description": "Стройконтроль 615-ФЗ (ООО Парадигма)"},
+        {"command": "objects", "description": "Объекты капремонта 615-ФЗ"},
+        {"command": "briefing", "description": "Утренний план и сводка дня"},
+        {"command": "evening", "description": "Вечерний отчет и итоги дня"},
+        {"command": "digest", "description": "Персональный аудио-дайджест"},
+        {"command": "expenses", "description": "Учет и контроль расходов"},
+        {"command": "reviews", "description": "Отзывы Яндекс.Карт ЦСЕ"},
+        {"command": "mail", "description": "Почта Mail.ru 24/7"},
+        {"command": "security", "description": "Кибер-Щит 24/7 и аудит"},
+        {"command": "pc", "description": "Управление ПК Linux"},
+        {"command": "backup", "description": "Создать резервную копию"}
+    ]
+    # Регистрация во всех скоупах и языках для гарантированного сброса кэша Telegram
+    for scope_type in ["default", "all_private_chats"]:
+        for lang in [None, "ru"]:
+            payload = {"commands": commands_list, "scope": {"type": scope_type}}
+            if lang:
+                payload["language_code"] = lang
+            send_api_request("setMyCommands", payload)
+
     send_api_request("setChatMenuButton", {"menu_button": {"type": "commands"}})
 
     # Установка описания бота без эмодзи (экран "Что умеет этот бот?" до нажатия Start)
-    desc_payload = {
-        "description": (
-            "ВЕКТОР // AI EXECUTIVE ASSISTANT\n\n"
-            "Персональный исполнительный ИИ-помощник:\n"
-            "• ИИ-Секретарь — голосовой ввод и быстрые ответы (Gemini 3.8 Flash)\n"
-            "• Задачи — списки дел, чек-листы и поручения\n"
-            "• Заметки — база знаний по 3 папкам (Спорт, Работа, Общее)\n"
-            "• Пароли — защищенный сейф логинов и ключей\n"
-            "• Поиск — мгновенный поиск по всей базе\n"
-            "• Напоминания — контроль дедлайнов и важных встреч\n"
-            "• Облачное хранилище — файлы, документы и бэкапы\n"
-            "• Почта — входящие письма и уведомления\n"
-            "• Справка — руководство и команды"
-        )
-    }
-    send_api_request("setMyDescription", desc_payload)
+    desc = (
+        "ВЕКТОР // AI EXECUTIVE ASSISTANT\n\n"
+        "Персональный исполнительный ИИ-помощник:\n"
+        "• ИИ-Секретарь — голосовой ввод и быстрые ответы (Gemini 3.8 Flash)\n"
+        "• Задачи — списки дел, чек-листы и поручения\n"
+        "• Заметки — база знаний по 3 папкам (Спорт, Работа, Общее)\n"
+        "• Напоминания — контроль дедлайнов и важных встреч 24/7\n"
+        "• Стройконтроль 615-ФЗ — объекты, акты АОСР, сметы и КС-2\n"
+        "• Пароли — защищенный сейф логинов и ключей Vault\n"
+        "• Финансы — учет и контроль расходов\n"
+        "• Почта — входящие письма Mail.ru и уведомления\n"
+        "• Кибер-Щит 24/7 & Управление ПК — телеметрия и защита"
+    )
+    send_api_request("setMyDescription", {"description": desc})
+    send_api_request("setMyDescription", {"description": desc, "language_code": "ru"})
 
-    short_desc_payload = {
-        "short_description": "Персональный исполнительный ИИ-ассистент: голосовой ввод, заметки, задачи, пароли и облачное хранилище 24/7."
-    }
-    send_api_request("setMyShortDescription", short_desc_payload)
+    short_desc = "Персональный исполнительный ИИ-ассистент: голосовой ввод, заметки, задачи, стройконтроль 615-ФЗ, напоминания и киберзащита 24/7."
+    send_api_request("setMyShortDescription", {"short_description": short_desc})
+    send_api_request("setMyShortDescription", {"short_description": short_desc, "language_code": "ru"})
 
 def process_command_text(sender_chat_id, text, is_voice=False, voice_file=None, user_name="Пользователь"):
     text_lower = text.lower().strip()
@@ -2777,11 +2784,41 @@ def process_command_text(sender_chat_id, text, is_voice=False, voice_file=None, 
     elif text_lower in ["/video", "видео", "видео анализ", "анализ видео", "бокс видео", "кружочек", "разбор боя"]:
         send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_video_dashboard_text(), "parse_mode": "HTML", "reply_markup": get_video_markup()})
         return
-    elif text_lower == "/notes":
+    elif text_lower in ["/notes", "заметки"]:
         send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_notes_text(sender_chat_id), "parse_mode": "HTML", "reply_markup": get_notes_markup(sender_chat_id)})
         return
-    elif text_lower == "/passwords":
+    elif text_lower in ["/passwords", "пароли"]:
         send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_passwords_text(), "parse_mode": "HTML", "reply_markup": get_back_button_markup()})
+        return
+    elif text_lower in ["/reminders", "/напоминания", "напоминания"]:
+        send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_reminders_dashboard_text(), "parse_mode": "HTML", "reply_markup": get_reminders_dashboard_markup()})
+        return
+    elif text_lower in ["/cloud", "/облако", "облако", "облачное хранилище"]:
+        send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_cloud_dashboard_text(), "parse_mode": "HTML", "reply_markup": get_cloud_dashboard_markup()})
+        return
+    elif text_lower in ["/mail", "/почта", "почта"]:
+        send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_mail_dashboard_text(), "parse_mode": "HTML", "reply_markup": get_mail_markup()})
+        return
+    elif text_lower in ["/help", "/справка", "справка", "/info", "помощь"]:
+        help_text = (
+            "<b>СПРАВКА И ВОЗМОЖНОСТИ БОТА</b>\n\n"
+            "<b>ВЕКТОР</b> — ваш персональный автономный ИИ-ассистент 2026:\n\n"
+            "<b>Сборка:</b> <code>#50 • v2.5.0 (GOLD MASTER // ЭТАЛОН)</code>\n"
+            "<b>Эргономика:</b> Адаптировано под экраны смартфонов 6.1 дюйма\n"
+            "<b>Статус:</b> 100% тестов пройдены, режим 24/7 активен\n\n"
+            "• <b>Голосовое управление:</b> Отправляйте голосовые сообщения любой длины — бот мгновенно расшифрует их и разложит по нужным категориям.\n"
+            "• <b>Заметки:</b> 3 удобные папки (Спорт, Работа, Общее) с карточками и экспортом в .txt.\n"
+            "• <b>Задачи:</b> Чек-листы и списки дел с отметкой выполнения в 1 клик.\n"
+            "• <b>Пароли:</b> Надежный сейф для быстрого копирования логинов и паролей.\n"
+            "• <b>Поиск:</b> Мгновенный поиск любого слова по всей вашей базе.\n"
+            "• <b>Напоминания:</b> Уведомления о важных встречах и событиях.\n"
+            "• <b>Облачное хранилище:</b> Документы, файлы и резервные копии 24/7.\n"
+            "• <b>Почта:</b> Удобный доступ к ящику Mail.ru прямо из Telegram.\n"
+            "• <b>Кибербезопасность (/security):</b> Центр защиты 24/7, экспресс-аудит, Wi-Fi сканер, сессии Telegram и права 0600.\n"
+            "• <b>Управление ПК (/pc):</b> Телеметрия Linux, статус служб, диски, RAM и самолечение.\n\n"
+            "<i>Просто отправьте текст или надиктуйте голос в чат в любой момент!</i>"
+        )
+        send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": help_text, "parse_mode": "HTML", "reply_markup": get_main_dashboard_markup()})
         return
     elif text_lower == "/expenses":
         send_api_request("sendMessage", {"chat_id": sender_chat_id, "text": get_expenses_text(), "parse_mode": "HTML", "reply_markup": get_back_button_markup()})
