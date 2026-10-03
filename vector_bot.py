@@ -802,10 +802,8 @@ def get_main_dashboard_markup():
     return {
         "inline_keyboard": [
             [{"text": "ИИ-Секретарь", "callback_data": "nav_secretary"}, {"text": "Задачи", "callback_data": "nav_tasks"}],
-            [{"text": "Заметки", "callback_data": "nav_notes"}, {"text": "Напоминания", "callback_data": "nav_remind"}],
-            [{"text": "Стройконтроль 615-ФЗ", "callback_data": "nav_construction"}, {"text": "Пароли", "callback_data": "nav_pass"}],
-            [{"text": "Почта", "callback_data": "nav_mail"}, {"text": "Кибер-Щит 24/7", "callback_data": "nav_security"}],
-            [{"text": "Управление ПК", "callback_data": "nav_pc"}, {"text": "Отзывы Яндекс.Карт", "callback_data": "nav_reviews"}]
+            [{"text": "Заметки", "callback_data": "nav_notes"}, {"text": "Пароли", "callback_data": "nav_pass"}],
+            [{"text": "Напоминания", "callback_data": "nav_remind"}, {"text": "Почта", "callback_data": "nav_mail"}]
         ]
     }
 
@@ -1031,17 +1029,13 @@ def get_mail_markup():
 def send_main_dashboard(chat_id):
     banner_path = os.path.join(PROJECT_ROOT, "assets", "vector_ai_welcome_banner.jpg")
     text = (
-        "<b>ВЕКТОР • ПАНЕЛЬ УПРАВЛЕНИЯ</b> <code>#118 v2.6.0</code>\n\n"
+        "<b>ВЕКТОР • МЕНЮ</b> <code>#50 v2.5.0</code>\n\n"
         "• <b>ИИ-Секретарь</b> — голосовой ввод и быстрые ответы\n"
         "• <b>Задачи</b> — списки дел, чек-листы и поручения\n"
         "• <b>Заметки</b> — база знаний по 3 папкам (Спорт, Работа, Общее)\n"
-        "• <b>Напоминания</b> — контроль дедлайнов и алармы 24/7\n"
-        "• <b>Стройконтроль 615-ФЗ</b> — акты АОСР, сметы и КС-2\n"
-        "• <b>Пароли</b> — защищенный сейф логинов и ключей Vault\n"
-        "• <b>Почта</b> — входящие письма Mail.ru и уведомления\n"
-        "• <b>Кибер-Щит 24/7</b> — защита узла и аудит безопасности\n"
-        "• <b>Управление ПК</b> — телеметрия SSD, RAM и служб\n"
-        "• <b>Отзывы Яндекс.Карт</b> — мониторинг зала бокса ЦСЕ\n\n"
+        "• <b>Пароли</b> — защищенный сейф логинов и ключей\n"
+        "• <b>Напоминания</b> — контроль дедлайнов и важных встреч\n"
+        "• <b>Почта</b> — входящие письма и уведомления\n\n"
         "<i>Выберите нужный раздел или надиктуйте голос:</i>"
     )
     markup = get_main_dashboard_markup()
@@ -1420,17 +1414,13 @@ def handle_callback(cb):
             edit_card(chat_id, msg_id, f"Ошибка проверки: {e}", {"inline_keyboard": [[{"text": "« Назад", "callback_data": "nav_reviews"}]]})
     elif cb_data == "nav_main":
         text = (
-            "<b>ВЕКТОР • ПАНЕЛЬ УПРАВЛЕНИЯ</b> <code>#118 v2.6.0</code>\n\n"
+            "<b>ВЕКТОР • МЕНЮ</b>\n\n"
             "• <b>ИИ-Секретарь</b> — голосовой ввод и быстрые ответы\n"
             "• <b>Задачи</b> — списки дел, чек-листы и поручения\n"
             "• <b>Заметки</b> — база знаний по 3 папкам (Спорт, Работа, Общее)\n"
-            "• <b>Напоминания</b> — контроль дедлайнов и алармы 24/7\n"
-            "• <b>Стройконтроль 615-ФЗ</b> — акты АОСР, сметы и КС-2\n"
-            "• <b>Пароли</b> — защищенный сейф логинов и ключей Vault\n"
-            "• <b>Почта</b> — входящие письма Mail.ru и уведомления\n"
-            "• <b>Кибер-Щит 24/7</b> — защита узла и аудит безопасности\n"
-            "• <b>Управление ПК</b> — телеметрия SSD, RAM и служб\n"
-            "• <b>Отзывы Яндекс.Карт</b> — мониторинг зала бокса ЦСЕ\n\n"
+            "• <b>Пароли</b> — защищенный сейф логинов и ключей\n"
+            "• <b>Напоминания</b> — контроль дедлайнов и важных встреч\n"
+            "• <b>Почта</b> — входящие письма и уведомления\n\n"
             "<i>Выберите нужный раздел или надиктуйте голос:</i>"
         )
         edit_card(chat_id, msg_id, text, get_main_dashboard_markup())
@@ -2353,24 +2343,14 @@ def handle_callback(cb):
 
 def setup_bot_commands():
     commands_list = [
-        {"command": "start", "description": "Главное меню и статус"},
-        {"command": "menu", "description": "Интерактивная панель"},
-        {"command": "secretary", "description": "ИИ-Секретарь (Gemini)"},
-        {"command": "tasks", "description": "Реестр задач и поручений"},
-        {"command": "notes", "description": "Заметки (3 папки: Спорт, Работа, Общее)"},
-        {"command": "reminders", "description": "Умные напоминания 24/7"},
-        {"command": "passwords", "description": "Защищенный сейф паролей Vault"},
-        {"command": "work", "description": "Стройконтроль 615-ФЗ (ООО Парадигма)"},
-        {"command": "objects", "description": "Объекты капремонта 615-ФЗ"},
-        {"command": "briefing", "description": "Утренний план и сводка дня"},
-        {"command": "evening", "description": "Вечерний отчет и итоги дня"},
-        {"command": "digest", "description": "Персональный аудио-дайджест"},
-        {"command": "expenses", "description": "Учет и контроль расходов"},
-        {"command": "reviews", "description": "Отзывы Яндекс.Карт ЦСЕ"},
-        {"command": "mail", "description": "Почта Mail.ru 24/7"},
-        {"command": "security", "description": "Кибер-Щит 24/7 и аудит"},
-        {"command": "pc", "description": "Управление ПК Linux"},
-        {"command": "backup", "description": "Создать резервную копию"}
+        {"command": "start", "description": "Главное меню"},
+        {"command": "menu", "description": "Панель управления"},
+        {"command": "secretary", "description": "ИИ-Секретарь"},
+        {"command": "tasks", "description": "Задачи"},
+        {"command": "notes", "description": "Заметки"},
+        {"command": "passwords", "description": "Пароли"},
+        {"command": "reminders", "description": "Напоминания"},
+        {"command": "mail", "description": "Почта"}
     ]
     # Регистрация во всех скоупах и языках для гарантированного сброса кэша Telegram
     for scope_type in ["default", "all_private_chats"]:
@@ -2389,17 +2369,14 @@ def setup_bot_commands():
         "• ИИ-Секретарь — голосовой ввод и быстрые ответы (Gemini 3.8 Flash)\n"
         "• Задачи — списки дел, чек-листы и поручения\n"
         "• Заметки — база знаний по 3 папкам (Спорт, Работа, Общее)\n"
-        "• Напоминания — контроль дедлайнов и важных встреч 24/7\n"
-        "• Стройконтроль 615-ФЗ — объекты, акты АОСР, сметы и КС-2\n"
-        "• Пароли — защищенный сейф логинов и ключей Vault\n"
-        "• Финансы — учет и контроль расходов\n"
-        "• Почта — входящие письма Mail.ru и уведомления\n"
-        "• Кибер-Щит 24/7 & Управление ПК — телеметрия и защита"
+        "• Пароли — защищенный сейф логинов и ключей\n"
+        "• Напоминания — контроль дедлайнов и важных встреч\n"
+        "• Почта — входящие письма и уведомления"
     )
     send_api_request("setMyDescription", {"description": desc})
     send_api_request("setMyDescription", {"description": desc, "language_code": "ru"})
 
-    short_desc = "Персональный исполнительный ИИ-ассистент: голосовой ввод, заметки, задачи, стройконтроль 615-ФЗ, напоминания и киберзащита 24/7."
+    short_desc = "Персональный исполнительный ИИ-ассистент: голосовой ввод, заметки, задачи, пароли, напоминания и почта."
     send_api_request("setMyShortDescription", {"short_description": short_desc})
     send_api_request("setMyShortDescription", {"short_description": short_desc, "language_code": "ru"})
 
